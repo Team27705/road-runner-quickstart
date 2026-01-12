@@ -63,13 +63,13 @@ public final class MecanumDrive {
                 RevHubOrientationOnRobot.UsbFacingDirection.UP;
 
         // drive model parameters
-        public double inPerTick = 1;
-        public double lateralInPerTick = inPerTick;
-        public double trackWidthTicks = 0;
+        public double inPerTick = 0.0020022803748714;
+        public double lateralInPerTick = 0.001426114912210775;
+        public double trackWidthTicks = 7478.465299665682;
 
         // feedforward parameters (in tick units)
-        public double kS = 0;
-        public double kV = 0;
+        public double kS = 0.8902377590115198;
+        public double kV = 0.0003761808714150729;
         public double kA = 0;
 
         // path profile parameters (in inches)
@@ -138,8 +138,8 @@ public final class MecanumDrive {
             imu = lazyImu.get();
 
             // TODO: reverse encoders if needed
-            //  rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
-            //  rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+              rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+              rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
 
             this.pose = pose;
         }
@@ -237,8 +237,8 @@ public final class MecanumDrive {
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // TODO: reverse motor directions if needed
-        //   rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        // rightFront.setDirection()
+        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // TODO: make sure your config has an IMU with this name (can be BNO or BHI)
         //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
@@ -247,7 +247,7 @@ public final class MecanumDrive {
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        localizer = new PinpointLocalizer(hardwareMap, PARAMS.inPerTick, pose);
+        localizer = new PinpointLocalizer(hardwareMap, PARAMS.inPerTick, new Pose2d(0,0,0));
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
     }
