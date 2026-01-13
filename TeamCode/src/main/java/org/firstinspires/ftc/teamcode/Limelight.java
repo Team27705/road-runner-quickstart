@@ -54,6 +54,24 @@ public class Limelight {
         limelight.setPollRateHz(rate);
     }
 
+    public void setPipeline(Pipelines pipeline) {
+        // Use the API provided by the Limelight3A sample: pipelineSwitch(index)
+        limelight.pipelineSwitch(pipeline.getValue());
+    }
+
+    public Pipelines getPipeline() {
+        // Read the pipeline index via the status object (matches sample code)
+        LLStatus status = limelight.getStatus();
+        if (status == null) return null;
+        int index = status.getPipelineIndex();
+        for (Pipelines pipeline : Pipelines.values()) {
+            if (pipeline.getValue() == index) {
+                return pipeline;
+            }
+        }
+        return null; // or throw an exception if preferred
+    }
+
     //**
     // Change pipeline depending on weather or not you need to get distance from an AprilTag or the ball
     // Use
