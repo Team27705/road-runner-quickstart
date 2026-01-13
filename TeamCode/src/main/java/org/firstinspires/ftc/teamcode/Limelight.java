@@ -1,10 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -12,7 +13,23 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 public class Limelight {
     //https://docs.limelightvision.io/docs/docs-limelight/apis/ftc-programming
 
-    private Limelight3A limelight;
+    public enum Pipelines {
+        APRILTAGGER(0),
+        PURPLER(1),
+        GREENER(2);
+
+        private final int value;
+
+        Pipelines(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
+    }
+
+    private final Limelight3A limelight;
 
     private int limelightMode; // 0 is to track AprilTags, 1 is used to track for balls and the colors
 
