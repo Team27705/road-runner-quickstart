@@ -79,8 +79,18 @@ public class Limelight {
 
     public void updateTelemetry() {
         LLResult llResult = limelight.getLatestResult();
-        if (llResult != null && llResult.isValid()) {
-//
+        if (llResult == null || !llResult.isValid()) {
+            telemetry.addData("Limelight", "No valid target found");
+            return;
+        } else {
+            telemetry.addData("Limelight", "Valid target found");
+            double tx = llResult.getTx(); // Horizontal offset from crosshair to target
+            double ty = llResult.getTy(); // Vertical offset from crosshair to target
+            double ta = llResult.getTa(); // Target area (0% of image to 100
+
+            telemetry.addData("LLTargetX", tx);
+            telemetry.addData("LLTargetY", ty);
+            telemetry.addData("LLTargetA", ta);
         }
     }
 
