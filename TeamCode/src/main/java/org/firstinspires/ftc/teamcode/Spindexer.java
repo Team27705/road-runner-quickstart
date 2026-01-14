@@ -111,9 +111,9 @@ public class Spindexer {
             if (!initalized) {
                 for (int i = 0; i < 3; i++) {
                     //check color of ball for purple or green then add it to list, then turn
-                    if (colorSensor.blue() && colorSensor.red()) {
-
-                    }
+//                    if (colorSensor.blue() && colorSensor.red()) {
+//
+//                    }
                 }
                 initalized = true; // do this bc its a one time action
             }
