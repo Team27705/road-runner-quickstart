@@ -27,7 +27,8 @@ public class Spindexer {
     //write to dashboard if needed
 
     private final double oneCycle = 1453.2 * 120 / 72;
-    private final int error = 50;
+    private final int error = 60; // last uused is 50
+    private long timeElapsed = 0;
 
 
     public Spindexer (HardwareMap hardwareMap) {
@@ -38,41 +39,45 @@ public class Spindexer {
         bootkicker.setDirection(Servo.Direction.REVERSE);
 
         spindexerMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexerMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
     }
 
-    public void resetServo () {
-        bootkicker.setPosition(0);
-    }
-    public void kickServo () {
+    public void kickServo() {
         bootkicker.setPosition(.45);
     }
-    public boolean servoStatus () {
-        return bootkicker.getPosition() == 0.0;
 
+    public void resetServo () {
+        bootkicker.setPosition(0);
+//        timeElapsed = System.currentTimeMillis();
+
+    }
+//    public void kickServo () {
+//        bootkicker.setPosition(.45);
+//    }
+    public boolean isServoDown () {
+        return bootkicker.getPosition() == 0;
     }
 
 
     public void cycleSpindexer () {
-        spindexerMotor.setTargetPosition((int) oneCycle - error);
-        spindexerMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        spindexerMotor.setPower(.7);
+        //&& timeElapsed - System.currentTimeMillis() >= 1200
+
+        if (spindexerMotor.getMode().equals(DcMotor.RunMode.STOP_AND_RESET_ENCODER) && isServoDown() ) {
+            spindexerMotor.setTargetPosition((int) oneCycle - error);
+            spindexerMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            spindexerMotor.setPower(.5);
+        }
+        else if (spindexerMotor.getCurrentPosition() == (int) oneCycle - error) {
+            // maybe subtract a little from onecycle to account for momentum, also use != maybe?
+            spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            spindexerMotor.setPower(0);
+        }
 
 
     }
-
-    public boolean spindexerAvailable () {
-        //checks if the spindexer's encoder has been reset and if the servo
-        if (spindexerMotor.getMode().equals(DcMotor.RunMode.STOP_AND_RESET_ENCODER) && servoStatus()) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
     public void checkSpinStatus () { //checks if the spindexer has reached target position
         if (spindexerMotor.getCurrentPosition() == (int) oneCycle - error) { // maybe subtract a little from onecycle to account for momentum, also use != maybe?
             spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);

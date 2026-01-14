@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode.telop;
 
+
+
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -11,6 +15,9 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.Outtake;
 import org.firstinspires.ftc.teamcode.Spindexer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @TeleOp (name = "")
 public class DriverTelop extends LinearOpMode {
@@ -21,7 +28,9 @@ public class DriverTelop extends LinearOpMode {
     private Spindexer spindexer;
     private Pose2d intialPosition;
 
-    public Telemetry telemetry;
+    private Telemetry telemetry;
+
+    private List<Action> runningActions = new ArrayList<>();
 
 
     @Override
@@ -37,16 +46,29 @@ public class DriverTelop extends LinearOpMode {
 
         waitForStart();
         while (opModeIsActive()) {
+            //create an action scheduler here and then add actions from detecting userInputs
+
+
+
             controllerBehaviorA();
             controllerBehaviorB();
+
+
+//            List<Action> newActions = new ArrayList<>();
+//            for (Action action: runningActions) {
+//
+//            }
+//            runningActions = newActions;
 
             updateTelem();
         }
 
+
+
     }
 
     public void controllerBehaviorA () {
-        double leftX = gamepad1.left_stick_x;
+        double leftX = gamepad1.left_stick_x * 1.1;
         double leftY = -gamepad1.left_stick_y;
         double rightX = gamepad1.right_stick_x ;
 
@@ -60,7 +82,7 @@ public class DriverTelop extends LinearOpMode {
             rightX = 0;
         }
 
-        driveTrain.driverRelativePower(leftY,leftX , rightX);
+        driveTrain.driverRelativePower(leftY, leftX , rightX);
 
 
         if (gamepad1.left_bumper) {
@@ -87,23 +109,21 @@ public class DriverTelop extends LinearOpMode {
             spindexer.kickServo();
         }
         if (gamepad2.dpad_down) {
-            spindexer.kickServo();
+            spindexer.resetServo();
         }
 
-        if (spindexer.spindexerAvailable()) {
-            if (gamepad2.y) {
-                spindexer.cycleSpindexer();
-            }
+        if (gamepad2.y) {
+            spindexer.cycleSpindexer();
         }
     }
 
     public void updateTelem () {
-        RevColorSensorV3 colorSensor = spindexer.getColorSensor();
-
-        telemetry.addData("Red:", colorSensor.red() );
-        telemetry.addData("Green:", colorSensor.green() );
-        telemetry.addData("Blue:", colorSensor.blue() );
-        telemetry.update();
+//        RevColorSensorV3 colorSensor = spindexer.getColorSensor();
+//
+//        telemetry.addData("Red:", colorSensor.red() );
+//        telemetry.addData("Green:", colorSensor.green() );
+//        telemetry.addData("Blue:", colorSensor.blue() );
+//        telemetry.update();
 
     }
 }
