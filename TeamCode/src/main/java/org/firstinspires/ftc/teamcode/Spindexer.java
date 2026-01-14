@@ -25,7 +25,7 @@ public class Spindexer {
     //write to dashboard if needed
 
     private final double oneCycle = 1453.2 * 120 / 72;
-    private final int error = 100;
+    private final int error = 50;
 
 
 
@@ -74,7 +74,7 @@ public class Spindexer {
         }
     }
 
-    public void checkSpinStatus () {
+    public void checkSpinStatus () { //checks if the spindexer has reached target position
         if (spindexerMotor.getCurrentPosition() == (int) oneCycle - error) { // maybe subtract a little from onecycle to account for momentum, also use != maybe?
             spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
