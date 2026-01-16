@@ -228,6 +228,7 @@ public class Limelight {
 
     /**
      * Action to start the Limelight with a specified polling rate
+     * Note: This Action is designed for single use. Create a new instance for each use.
      */
     public class StartLimelightAction implements Action {
         private final int pollRate;
@@ -255,6 +256,7 @@ public class Limelight {
 
     /**
      * Action to close/stop the Limelight
+     * Note: This Action is designed for single use. Create a new instance for each use.
      */
     public class CloseLimelightAction implements Action {
         private boolean initialized = false;
@@ -272,6 +274,7 @@ public class Limelight {
 
     /**
      * Action to set the Limelight pipeline
+     * Note: This Action is designed for single use. Create a new instance for each use.
      */
     public class SetPipelineAction implements Action {
         private final Pipelines pipeline;
@@ -294,7 +297,8 @@ public class Limelight {
 
     /**
      * Action to detect and retrieve an AprilTag
-     * Note: Assumes Limelight is already started and APRILTAGGER pipeline is active
+     * Note: Assumes Limelight is already started and APRILTAGGER pipeline is active.
+     * This Action is designed for single use. Create a new instance for each use.
      */
     public class GetAprilTagAction implements Action {
         private boolean initialized = false;
@@ -333,7 +337,8 @@ public class Limelight {
 
     /**
      * Action to detect artifact sequence (motif) from AprilTags
-     * Note: Assumes Limelight is already started and APRILTAGGER pipeline is active
+     * Note: Assumes Limelight is already started and APRILTAGGER pipeline is active.
+     * This Action is designed for single use. Create a new instance for each use.
      */
     public class DetectArtifactSequenceAction implements Action {
         private boolean initialized = false;
@@ -356,7 +361,6 @@ public class Limelight {
                             if (m != null) {
                                 found = m;
                                 packet.put("apriltag_id", id);
-                                packet.put("motif_detected", m.name());
                                 break;
                             }
                         }
