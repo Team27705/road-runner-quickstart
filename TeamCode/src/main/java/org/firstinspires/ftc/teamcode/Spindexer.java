@@ -27,7 +27,7 @@ public class Spindexer {
     //write to dashboard if needed
 
     private final double oneCycle = 1453.2 * 120 / 72;
-    private final int error = 60; // last uused is 50
+    private final int error = 60; // last uused is 50, may be under shooting
     private long timeElapsed = 0;
 
 
