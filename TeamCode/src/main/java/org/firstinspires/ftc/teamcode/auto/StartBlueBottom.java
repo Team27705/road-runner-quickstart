@@ -1,11 +1,32 @@
 package org.firstinspires.ftc.teamcode.auto;
 
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-public class StartBlueBottom extends LinearOpMode {
-    public void runOpMode() throws InterruptedException{
-//        Pose2d beginPose = new Pose2d(new Vector2d)
-    }
+import org.firstinspires.ftc.teamcode.Limelight;
+import org.firstinspires.ftc.teamcode.MecanumDrive;
 
+public class StartBlueBottom extends LinearOpMode {
+
+    MecanumDrive mecanumDrive;
+    Limelight limelight;
+
+    @Override
+    public void runOpMode() throws InterruptedException {
+
+        Pose2d beginPose = new Pose2d(new Vector2d(-60.0, 37), Math.toRadians(0));
+
+        mecanumDrive = new MecanumDrive(this.hardwareMap, beginPose);
+        limelight = new Limelight(this.hardwareMap);
+
+
+        waitForStart();
+
+        TrajectoryActionBuilder path = mecanumDrive.actionBuilder(beginPose)
+                .afterTime()
+
+
+    }
 }

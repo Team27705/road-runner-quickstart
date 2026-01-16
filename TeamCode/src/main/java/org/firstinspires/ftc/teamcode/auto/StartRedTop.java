@@ -37,6 +37,9 @@ public class StartRedTop extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         mecanumDrive = new MecanumDrive(this.hardwareMap, beginPose);
+        limelight = new Limelight(this.hardwareMap);
+
+
 
 //        mecanumDrive.updatePoseEstimate(); use this to update pose from trajectory to trajectory
 
@@ -58,11 +61,17 @@ public class StartRedTop extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
-                        test
-
-                                .build()
+                        test.build()
                 )
         );
 
+        Actions.runBlocking(
+                new SequentialAction(
+                        goToObelisk,
+
+
+                )
+
+        );
     }
 }
