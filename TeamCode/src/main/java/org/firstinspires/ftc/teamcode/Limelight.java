@@ -294,6 +294,7 @@ public class Limelight {
 
     /**
      * Action to detect and retrieve an AprilTag
+     * Note: Assumes Limelight is already started and APRILTAGGER pipeline is active
      */
     public class GetAprilTagAction implements Action {
         private boolean initialized = false;
@@ -302,15 +303,23 @@ public class Limelight {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
-                result = getAprilTag();
-                if (result != null) {
-                    packet.put("apriltag_found", true);
-                    packet.put("apriltag_id", result.getFiducialId());
-                    packet.put("apriltag_family", result.getFamily());
-                    packet.put("apriltag_x", result.getTargetXDegrees());
-                    packet.put("apriltag_y", result.getTargetYDegrees());
+                // Just read the latest result without changing Limelight state
+                LLResult llResult = getLatestResult();
+                if (llResult != null && llResult.isValid()) {
+                    java.util.List<LLResultTypes.FiducialResult> fiducials = llResult.getFiducialResults();
+                    if (fiducials != null && !fiducials.isEmpty()) {
+                        result = fiducials.get(0);
+                        packet.put("apriltag_found", true);
+                        packet.put("apriltag_id", result.getFiducialId());
+                        packet.put("apriltag_family", result.getFamily());
+                        packet.put("apriltag_x", result.getTargetXDegrees());
+                        packet.put("apriltag_y", result.getTargetYDegrees());
+                    } else {
+                        packet.put("apriltag_found", false);
+                    }
                 } else {
                     packet.put("apriltag_found", false);
+                    packet.put("apriltag_result", "invalid");
                 }
                 initialized = true;
             }
@@ -324,21 +333,46 @@ public class Limelight {
 
     /**
      * Action to detect artifact sequence (motif) from AprilTags
+     * Note: Assumes Limelight is already started and APRILTAGGER pipeline is active
      */
     public class DetectArtifactSequenceAction implements Action {
-        private final ArtifactSequence artifactSequence;
         private boolean initialized = false;
-
-        public DetectArtifactSequenceAction() {
-            this.artifactSequence = new ArtifactSequence();
-        }
+        private Motif detectedMotif = null;
 
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
-                Motif detected = artifactSequence.update(packet);
-                if (detected != null) {
-                    packet.put("motif_detected", detected.name());
+                // Read AprilTags without changing Limelight state
+                LLResult result = getLatestResult();
+                Motif found = null;
+
+                if (result != null && result.isValid()) {
+                    java.util.List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
+                    if (fiducials != null && !fiducials.isEmpty()) {
+                        // Iterate and pick the first fiducial that maps to a known Motif
+                        for (LLResultTypes.FiducialResult fr : fiducials) {
+                            int id = fr.getFiducialId();
+                            Motif m = motifFromId(id);
+                            if (m != null) {
+                                found = m;
+                                packet.put("apriltag_id", id);
+                                packet.put("motif_detected", m.name());
+                                break;
+                            }
+                        }
+                        if (found == null) {
+                            packet.put("apriltag", "no matching motif");
+                        }
+                    } else {
+                        packet.put("apriltag", "none");
+                    }
+                } else {
+                    packet.put("apriltag_result", "invalid");
+                }
+
+                detectedMotif = found;
+                if (found != null) {
+                    packet.put("motif_detected", found.name());
                 } else {
                     packet.put("motif_detected", "none");
                 }
@@ -348,7 +382,15 @@ public class Limelight {
         }
 
         public Motif getDetectedMotif() {
-            return artifactSequence.detectedMotif;
+            return detectedMotif;
+        }
+
+        // Helper to map AprilTag ID to Motif enum. Returns null if no mapping exists.
+        private Motif motifFromId(int id) {
+            for (Motif m : Motif.values()) {
+                if (m.getValue() == id) return m;
+            }
+            return null;
         }
     }
 

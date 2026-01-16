@@ -31,6 +31,7 @@ public class LimelightActionExample extends LinearOpMode {
 
         if (opModeIsActive()) {
             // Example 1: Simple sequence of Limelight actions
+            // Properly manage Limelight state with start -> operations -> close
             Action limelightSequence = new SequentialAction(
                     limelight.startLimelightAction(100),
                     limelight.setPipelineAction(Limelight.Pipelines.APRILTAGGER),
@@ -45,11 +46,12 @@ public class LimelightActionExample extends LinearOpMode {
             telemetry.update();
 
             // Example 2: Using Limelight actions with movement
+            // Keep Limelight active during the entire sequence
             Action complexSequence = drive.actionBuilder(beginPose)
                     .afterTime(0, limelight.startLimelightAction())
+                    .afterTime(0.1, limelight.setPipelineAction(Limelight.Pipelines.APRILTAGGER))
                     .lineToX(-50)
-                    .afterTime(0, limelight.setPipelineAction(Limelight.Pipelines.APRILTAGGER))
-                    .waitSeconds(1)
+                    .waitSeconds(0.5) // Wait for Limelight to get a good reading
                     .afterTime(0, limelight.getAprilTagAction())
                     .lineToX(-40)
                     .afterTime(0, limelight.closeLimelightAction())
