@@ -47,7 +47,7 @@ public class StartRedTop extends LinearOpMode {
         waitForStart();
 
 
-        beginPose = new Pose2d(0, 0, Math.toRadians(0));
+        beginPose = new  Pose2d(new Vector2d(-60.0, -37), Math.toRadians(270));
 
         mecanumDrive = new MecanumDrive(this.hardwareMap, beginPose);
         limelight = new Limelight(this.hardwareMap);
@@ -74,7 +74,8 @@ public class StartRedTop extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
-                        test.build()
+                        goToObelisk.build(),
+                        goToShootingZone.build()
                 )
         );
 

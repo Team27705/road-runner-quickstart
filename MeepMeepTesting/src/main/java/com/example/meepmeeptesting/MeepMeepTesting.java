@@ -47,7 +47,7 @@ public class MeepMeepTesting {
 
         // start from goal go to center
 
-        TrajectoryActionBuilder goToObelisk = myBot.getDrive().actionBuilder(beginPose)
+        TrajectoryActionBuilder goToObelisk = myBot.getDrive().actionBuilder(new  Pose2d(new Vector2d(-60.0, -37), Math.toRadians(270)))
                 .waitSeconds(1)
                 .splineToSplineHeading(new Pose2d(-34, 0, Math.toRadians(180)), Math.toRadians(45) // may have to go back futher like 24 or 20
         );
@@ -67,7 +67,7 @@ public class MeepMeepTesting {
                 );
 
         myBot.runAction(
-                test.build()
+                goToObelisk.build()
         );
 
 //

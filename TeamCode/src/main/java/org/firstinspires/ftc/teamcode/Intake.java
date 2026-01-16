@@ -18,4 +18,6 @@ public class Intake {
     public void spinIntake () {
         intakeMotor.setPower(-0.8);
     }
+
+    public void reverseIntake () {intakeMotor.setPower(0.8);}
 }

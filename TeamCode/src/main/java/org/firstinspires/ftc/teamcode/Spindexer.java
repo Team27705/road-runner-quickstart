@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.Actions;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -21,7 +22,6 @@ public class Spindexer {
 
     public static String[] artifactSequence; // set this with camera
     private String[] storageSequence = {"Empty","Empty","Empty"}; //let 1 be your intake, write this to dashboard for operator
-
     private ArrayList<String> artifactsInGoal; //have a button to add a green or purple and remove all elements from list
     //use the last item in the list to compare with the artifact sequence and
     //write to dashboard if needed
@@ -60,6 +60,18 @@ public class Spindexer {
     public boolean isServoDown () {
         return bootkicker.getPosition() == 0;
     }
+//
+//    public class cycleSpindexer extends Actions {
+//        public
+//    }
+//
+//    public void addBallsShot () {
+//        if () {
+//
+//
+//        }
+//        artifactsInGoal.add();
+//    }
 
 
     public void cycleSpindexer () {

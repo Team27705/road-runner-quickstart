@@ -91,6 +91,8 @@ public class DriverTelop extends LinearOpMode {
         if (gamepad1.right_bumper) {
             intake.idleIntake();
         }
+
+
     }
 
     public void controllerBehaviorB () {
@@ -115,6 +117,10 @@ public class DriverTelop extends LinearOpMode {
         if (gamepad2.y) {
             spindexer.cycleSpindexer();
         }
+
+//        if (gamepad2.right_bumper) {
+//            spindexer.reAdjust();
+//        }
     }
 
     public void updateTelem () {
