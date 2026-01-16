@@ -19,7 +19,7 @@ public class Spindexer {
     private DcMotor spindexerMotor;
     private RevColorSensorV3 colorSensor;
 
-    public String[] artifactSequence; // set this with camera
+    public static String[] artifactSequence; // set this with camera
     private String[] storageSequence = {"Empty","Empty","Empty"}; //let 1 be your intake, write this to dashboard for operator
 
     private ArrayList<String> artifactsInGoal; //have a button to add a green or purple and remove all elements from list

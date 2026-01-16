@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
+import androidx.annotation.NonNull;
+
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Action;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -30,6 +34,25 @@ public class Outtake {
         flywheelMotor.setPower(1);
     }
 
+    public class AutoRamp implements Action {
+
+        private boolean initalized = false;
+        private double motorPower = 0.0;
+
+        public AutoRamp(double motorPower) {
+            this.motorPower = motorPower;
+        }
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            flywheelMotor.setPower(motorPower);
+            return true;
+        }
+    }
+
+    public Action AutoRamp (double motorPower) {
+        return new AutoRamp(motorPower); // constructs a AutoRamp Action and returns it
+    }
 
 }
 
