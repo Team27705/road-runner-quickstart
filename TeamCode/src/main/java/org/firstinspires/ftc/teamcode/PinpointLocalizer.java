@@ -31,7 +31,7 @@ PinpointLocalizer implements Localizer {
 
     private Pose2d txWorldPinpoint;
     private Pose2d txPinpointRobot;
-    //Field is inverted
+    //Field coordinates corrected by negating X and Y in update() method
     public PinpointLocalizer(HardwareMap hardwareMap, double inPerTick, Pose2d initialPose) {
         // TODO: make sure your config has a Pinpoint device with this name
         //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
@@ -67,8 +67,9 @@ PinpointLocalizer implements Localizer {
     public PoseVelocity2d update() {
         driver.update();
         if (Objects.requireNonNull(driver.getDeviceStatus()) == GoBildaPinpointDriver.DeviceStatus.READY) {
-            txPinpointRobot = new Pose2d(driver.getPosX(DistanceUnit.INCH), driver.getPosY(DistanceUnit.INCH), driver.getHeading(UnnormalizedAngleUnit.RADIANS));
-            Vector2d worldVelocity = new Vector2d(driver.getVelX(DistanceUnit.INCH), driver.getVelY(DistanceUnit.INCH));
+            // Negate X and Y to correct for inverted field coordinate system
+            txPinpointRobot = new Pose2d(-driver.getPosX(DistanceUnit.INCH), -driver.getPosY(DistanceUnit.INCH), driver.getHeading(UnnormalizedAngleUnit.RADIANS));
+            Vector2d worldVelocity = new Vector2d(-driver.getVelX(DistanceUnit.INCH), -driver.getVelY(DistanceUnit.INCH));
             Vector2d robotVelocity = Rotation2d.fromDouble(-txPinpointRobot.heading.log()).times(worldVelocity);
 
             return new PoseVelocity2d(robotVelocity, driver.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS));
