@@ -43,43 +43,44 @@ public class MeepMeepTesting {
 
         Pose2d beginPose = new Pose2d(new Vector2d(-60.0, 37), Math.toRadians(0));
 
-        DriveShim mechanumDrive = myBot.getDrive();
+        DriveShim mecanumDrive = myBot.getDrive();
 
 
         // start from goal go to center
 
-        TrajectoryActionBuilder goToObelisk = mechanumDrive.actionBuilder(beginPose)
+        TrajectoryActionBuilder goToObelisk = mecanumDrive.actionBuilder(beginPose)
                 .waitSeconds(1)
-                .splineToSplineHeading(new Pose2d(-34, 0, Math.toRadians(180)), Math.toRadians(45));
+                .splineToLinearHeading(new Pose2d(-34, 0, Math.toRadians(180)), Math.toRadians(10));
 
-        TrajectoryActionBuilder goToShootingZone0 = mechanumDrive
+        TrajectoryActionBuilder goToShootingZone0 = mecanumDrive
                 .actionBuilder(new Pose2d(-34, 0, Math.toRadians(180)))
-                .splineToLinearHeading(new Pose2d(-10, 10, Math.toRadians(135)), Math.toRadians(10))
+                .turnTo(Math.toRadians(135))
+                .splineToConstantHeading(new Vector2d(-10, 10), Math.toRadians(135))
                 .waitSeconds(1);
 
-        TrajectoryActionBuilder goToBallSet1 = mechanumDrive
+        TrajectoryActionBuilder goToBallSet1 = mecanumDrive
                 .actionBuilder(new Pose2d(-10, 10, Math.toRadians(135)))
                 .splineToLinearHeading(new Pose2d(-11, 30, Math.toRadians(90)), Math.toRadians(20));
 
-        TrajectoryActionBuilder intakeBallSet1 = mechanumDrive
+        TrajectoryActionBuilder intakeBallSet1 = mecanumDrive
                 .actionBuilder(new Pose2d(-11, 30, Math.toRadians(90)))
                 .lineToY(50)
                 .turnTo(Math.toRadians(180));
 
-        TrajectoryActionBuilder goToShootingZone1 = mechanumDrive
+        TrajectoryActionBuilder goToShootingZone1 = mecanumDrive
                 .actionBuilder(new Pose2d(-11, 50, Math.toRadians(180)))
                 .splineToLinearHeading(new Pose2d(-10, 10, Math.toRadians(135)), Math.toRadians(-10))
                 .waitSeconds(1);
 
-        TrajectoryActionBuilder goToBallSet2 = mechanumDrive
+        TrajectoryActionBuilder goToBallSet2 = mecanumDrive
                 .actionBuilder(new Pose2d(-10, 10, Math.toRadians(135)))
                 .splineToLinearHeading(new Pose2d(12, 30, Math.toRadians(90)), Math.toRadians(-20));
 
-        TrajectoryActionBuilder intakeBallSet2 = mechanumDrive
+        TrajectoryActionBuilder intakeBallSet2 = mecanumDrive
                 .actionBuilder(new Pose2d(12, 30, Math.toRadians(90)))
                 .lineToY(50);
 
-        TrajectoryActionBuilder goToShootingZone2 = mechanumDrive
+        TrajectoryActionBuilder goToShootingZone2 = mecanumDrive
                 .actionBuilder(new Pose2d(12, 50, Math.toRadians(90)))
                 .splineToLinearHeading(new Pose2d(-10, 10, Math.toRadians(135)), Math.toRadians(30))
                 .waitSeconds(1);
@@ -91,9 +92,7 @@ public class MeepMeepTesting {
                         goToBallSet1.build(),
                         intakeBallSet1.build(),
                         goToShootingZone1.build(),
-                        goToBallSet2.build(),
-                        intakeBallSet2.build(),
-                        goToShootingZone2.build()
+                        goToBallSet2.build()
                     )
         );
 

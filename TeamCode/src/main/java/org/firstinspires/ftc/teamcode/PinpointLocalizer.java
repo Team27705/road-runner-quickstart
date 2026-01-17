@@ -14,7 +14,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import java.util.Objects;
 
 @Config
-public final class PinpointLocalizer implements Localizer {
+public final class
+PinpointLocalizer implements Localizer {
     public static class Params {
 
         //note I flipped the odometry pods on the robot so x is now y and y is now x
@@ -44,7 +45,7 @@ public final class PinpointLocalizer implements Localizer {
 
         // TODO: reverse encoder directions if needed
         initialParDirection = GoBildaPinpointDriver.EncoderDirection.FORWARD;
-        initialPerpDirection = GoBildaPinpointDriver.EncoderDirection.REVERSED;
+        initialPerpDirection = GoBildaPinpointDriver.EncoderDirection.FORWARD;
 
         driver.setEncoderDirections(initialParDirection, initialPerpDirection);
 
