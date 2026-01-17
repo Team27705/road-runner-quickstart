@@ -73,6 +73,9 @@ public class StartRedTop extends LinearOpMode {
                 .splineToLinearHeading(new Pose2d(-10, -10, Math.toRadians(135)), Math.toRadians(30))
                 .waitSeconds(1);
 
+        TrajectoryActionBuilder moveForward = mecanumDrive.actionBuilder(new Pose2d(0,0,Math.toRadians(0)))
+                .lineToXConstantHeading(10);
+
         Actions.runBlocking(
                 new SequentialAction(
                         goToObelisk.build(),
@@ -81,6 +84,12 @@ public class StartRedTop extends LinearOpMode {
                         intakeBallSet1.build(),
                         goToShootingZone1.build(),
                         goToBallSet2.build()
+                )
+        );
+
+        Actions.runBlocking(
+                new SequentialAction(
+
                 )
         );
 
