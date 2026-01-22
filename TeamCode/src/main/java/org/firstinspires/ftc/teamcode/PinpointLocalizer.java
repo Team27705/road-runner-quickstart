@@ -19,8 +19,8 @@ PinpointLocalizer implements Localizer {
     public static class Params {
 
         //note I flipped the odometry pods on the robot so x is now y and y is now x
-        public double parYTicks = -4131.688387905155; // y position of the parallel encoder (in tick units)
-        public double perpXTicks = 322.97849051288966; // x position of the perpendicular encoder (in tick units)
+        public double parYTicks; // y position of the parallel encoder (in tick units)
+        public double perpXTicks; // x position of the perpendicular encoder (in tick units)
         //try to manually calculate these
     }
 
@@ -50,14 +50,12 @@ PinpointLocalizer implements Localizer {
         driver.setEncoderDirections(initialParDirection, initialPerpDirection);
 
         txPinpointRobot = initialPose;
-        txWorldPinpoint = initialPose;
     }
 
     @Override
     public void setPose(Pose2d pose) {
         txWorldPinpoint = pose.times(txPinpointRobot.inverse());
     }
-
     @Override
     public Pose2d getPose() {
         return txWorldPinpoint.times(txPinpointRobot);
@@ -66,6 +64,7 @@ PinpointLocalizer implements Localizer {
     @Override
     public PoseVelocity2d update() {
         driver.update();
+//note: mod everything by 360 for all unnormalized angle unit mod by 2 pi
         if (Objects.requireNonNull(driver.getDeviceStatus()) == GoBildaPinpointDriver.DeviceStatus.READY) {
             txPinpointRobot = new Pose2d(driver.getPosX(DistanceUnit.INCH), driver.getPosY(DistanceUnit.INCH), driver.getHeading(UnnormalizedAngleUnit.RADIANS));
             Vector2d worldVelocity = new Vector2d(driver.getVelX(DistanceUnit.INCH), driver.getVelY(DistanceUnit.INCH));
