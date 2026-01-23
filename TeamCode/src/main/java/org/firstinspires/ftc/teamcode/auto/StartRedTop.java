@@ -78,12 +78,12 @@ public class StartRedTop extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
-                        goToObelisk.build(),
-                        goToShootingZone0.build(),
-                        goToBallSet1.build(),
-                        intakeBallSet1.build(),
-                        goToShootingZone1.build(),
-                        goToBallSet2.build()
+                        goToObelisk.build()
+//                        goToShootingZone0.build(),
+//                        goToBallSet1.build(),
+//                        intakeBallSet1.build(),
+//                        goToShootingZone1.build(),
+//                        goToBallSet2.build()
                 )
         );
 
