@@ -12,20 +12,22 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import java.util.concurrent.TimeUnit;
+
 
 public class TorctexServo {
 
     private final CRServo trServo;
     private final AnalogInput servoEncoder;
     private double currentAngle;
-    private double lastAngle;
+    private double previousAngle;
     private double startingAngle; //last angle
     private double targetAngle;
-    private double position; //the unnormalized vector
+    private double position; //the unnormalized vector, the total number of rotations
 
+    private double homeAngle;
 
-
-    private ElapsedTime pidTimer;
+    //the positions
 
 
     private DIRECTION direction;
@@ -55,25 +57,28 @@ public class TorctexServo {
 
     public void initialize() {
         trServo.setPower(0);
-        startingAngle = getCurrentAngle();
+        previousAngle = getCurrentAngle();
 
         currentAngle = startingAngle;
-
     }
 
-    public boolean atPosition () {
-        return currentAngle == targetAngle;
-    }
+//    public boolean atPosition () {
+//        return currentAngle - <  targetAngle;
+//    }
 
     public void update() {
+        // run this contionously
         //calculate unnormalized rotations in degrees
-
-
-
+//
+//
+//
         currentAngle = getCurrentAngle();
-        if (currentAngle != targetAngle) {
-            setPower();
-        }
+
+        position += currentAngle - previousAngle; // calculate the total rotations
+//        if (currentAngle != targetAngle) {
+//            setPower();
+//        }
+        previousAngle  = getCurrentAngle();
     }
 
     public double getVoltage () {
@@ -94,12 +99,20 @@ public class TorctexServo {
         return angle;
     }
 
+    public void setServoPower (double power) {
+        trServo.setPower(power);
+    }
+
     public void changeTargetPosition () {
 
     }
 
     public void setTargetPosition() {
 
+    }
+
+    public double getPosition() {
+        return position;
     }
 
 
@@ -109,13 +122,15 @@ public class TorctexServo {
         return String.format(
                 "Starting Position: %.3f\n" +
                         "Voltage Reading: %.3f\n"+
-                        "Current Angle: %.3f\n:",
+                        "Current Angle: %.3f\n",
+                        "Total angular Rotation: %.3f \n",
 //                        "Target Position: %.3\n"+
 //                        "Error: %.3\n",
 
                     startingAngle,
                     getVoltage(),
-                    getCurrentAngle()
+                    getCurrentAngle(),
+                    getPosition()
                 );
     }
 
@@ -131,16 +146,25 @@ public class TorctexServo {
             AnalogInput analogVoltageSignal = hardwareMap.get(AnalogInput.class, "rightHorizSlideEncoder");
 
             TorctexServo TRServo = new TorctexServo(sr, analogVoltageSignal);
+            ElapsedTime clock = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+            double timeElapsed = 0;
+            double start = 0;
 
 
             while (!isStopRequested()) {
-
-
+                if (gamepad1.aWasReleased()) {
+                    start = clock.startTime();
+                }
+                TRServo.setServoPower(1);
 
 
                 telemetry.addLine(TRServo.log());
-
+                telemetry.addData("Time ms:", timeElapsed);
                 telemetry.update();
+
+
+                double end = clock.time(TimeUnit.MILLISECONDS);
+                timeElapsed = start - end;
             }
 
 
