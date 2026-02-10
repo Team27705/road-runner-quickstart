@@ -122,7 +122,7 @@ public class TorctexServo {
         return String.format(
                 "Starting Position: %.3f\n" +
                         "Voltage Reading: %.3f\n"+
-                        "Current Angle: %.3f\n",
+                        "Current Angle: %.3f\n"+
                         "Total angular Rotation: %.3f \n",
 //                        "Target Position: %.3\n"+
 //                        "Error: %.3\n",
@@ -146,25 +146,26 @@ public class TorctexServo {
             AnalogInput analogVoltageSignal = hardwareMap.get(AnalogInput.class, "rightHorizSlideEncoder");
 
             TorctexServo TRServo = new TorctexServo(sr, analogVoltageSignal);
-            ElapsedTime clock = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+            ElapsedTime clock = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
             double timeElapsed = 0;
             double start = 0;
 
 
             while (!isStopRequested()) {
+                TRServo.update();
                 if (gamepad1.aWasReleased()) {
-                    start = clock.startTime();
+                    clock.reset();
+                    start = clock.now(TimeUnit.SECONDS);
+                    TRServo.setServoPower(1);
+
                 }
-                TRServo.setServoPower(1);
-
-
+                TRServo.update();
+                double end = clock.now(TimeUnit.SECONDS);
+                timeElapsed = clock.now(TimeUnit.SECONDS) - start;
                 telemetry.addLine(TRServo.log());
-                telemetry.addData("Time ms:", timeElapsed);
+                telemetry.addData("Time ms: %.3f", timeElapsed);
                 telemetry.update();
 
-
-                double end = clock.time(TimeUnit.MILLISECONDS);
-                timeElapsed = start - end;
             }
 
 
