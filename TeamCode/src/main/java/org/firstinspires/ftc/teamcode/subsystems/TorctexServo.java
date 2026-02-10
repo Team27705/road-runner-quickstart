@@ -70,11 +70,16 @@ public class TorctexServo {
         // run this contionously
         //calculate unnormalized rotations in degrees
 //
-//
-//
         currentAngle = getCurrentAngle();
 
-        position += currentAngle - previousAngle; // calculate the total rotations
+        if (currentAngle - previousAngle < 0) {
+            position += currentAngle - (360 - previousAngle);
+        }
+        else {
+            position += currentAngle - previousAngle;
+        }
+
+//        position += currentAngle - previousAngle; // calculate the total rotations
 //        if (currentAngle != targetAngle) {
 //            setPower();
 //        }
@@ -156,7 +161,7 @@ public class TorctexServo {
                 if (gamepad1.aWasReleased()) {
                     clock.reset();
                     start = clock.now(TimeUnit.SECONDS);
-                    TRServo.setServoPower(1);
+                    TRServo.setServoPower(.5);
 
                 }
                 TRServo.update();
