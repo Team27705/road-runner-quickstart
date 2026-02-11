@@ -74,12 +74,15 @@ public class TorctexServo {
 
 
 
-        if (currentAngle - previousAngle > 0) {
+        if (currentAngle - previousAngle > 180) {
             totalRotation += currentAngle - previousAngle -360;
         }
-        else if (currentAngle - previousAngle < 0) {
+        else if (currentAngle - previousAngle < -180) {
             totalRotation += currentAngle - previousAngle + 360;
         }
+
+
+        //include an interupt if the servo is already at the
 
 //        position += currentAngle - previousAngle; // calculate the total rotations
 //        if (currentAngle != targetAngle) {
