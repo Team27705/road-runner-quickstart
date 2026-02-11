@@ -71,14 +71,14 @@ public class TorctexServo {
         //calculate unnormalized rotations in degrees
 //
         currentAngle = getCurrentAngle();
+        double angleDelta = currentAngle - previousAngle;
 
 
-
-        if (currentAngle - previousAngle > 180) {
-            totalRotation += currentAngle - previousAngle -360;
+        if (angleDelta > 180) {
+            totalRotation -= angleDelta -360;
         }
-        else if (currentAngle - previousAngle < -180) {
-            totalRotation += currentAngle - previousAngle + 360;
+        else if (angleDelta < -180) {
+            totalRotation += angleDelta + 360;
         }
 
 
@@ -173,6 +173,7 @@ public class TorctexServo {
                 timeElapsed = clock.now(TimeUnit.SECONDS) - start;
                 telemetry.addLine(TRServo.log());
                 telemetry.addData("Time ms: %.3f", timeElapsed);
+                telemetry.addData("Velocity: %.3f", TRServo.getTotalRotation() / timeElapsed);
                 telemetry.update();
 
             }

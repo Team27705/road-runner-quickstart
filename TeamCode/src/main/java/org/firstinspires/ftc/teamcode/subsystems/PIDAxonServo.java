@@ -138,8 +138,8 @@ public class PIDAxonServo {
     }
 
 
-    @TeleOp(name = "", group = "")
-    public class TRServo extends LinearOpMode {
+    @TeleOp(name = "Torctex max vel", group = "testing")
+    public static class TRServo extends LinearOpMode {
 
 
         private double kP = 0;
