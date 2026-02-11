@@ -23,7 +23,7 @@ public class TorctexServo {
     private double previousAngle;
     private double startingAngle; //last angle
     private double targetAngle;
-    private double position; //the unnormalized vector, the total number of rotations
+    private double totalRotation; //the unnormalized vector, the total number of rotations
 
     private double homeAngle;
 
@@ -72,18 +72,20 @@ public class TorctexServo {
 //
         currentAngle = getCurrentAngle();
 
-        if (currentAngle - previousAngle < 0) {
-            position += currentAngle - (360 - previousAngle);
+
+
+        if (currentAngle - previousAngle > 0) {
+            totalRotation += currentAngle - previousAngle -360;
         }
-        else {
-            position += currentAngle - previousAngle;
+        else if (currentAngle - previousAngle < 0) {
+            totalRotation += currentAngle - previousAngle + 360;
         }
 
 //        position += currentAngle - previousAngle; // calculate the total rotations
 //        if (currentAngle != targetAngle) {
 //            setPower();
 //        }
-        previousAngle  = getCurrentAngle();
+        previousAngle  = currentAngle;
     }
 
     public double getVoltage () {
@@ -109,15 +111,14 @@ public class TorctexServo {
     }
 
     public void changeTargetPosition () {
-
     }
 
     public void setTargetPosition() {
 
     }
 
-    public double getPosition() {
-        return position;
+    public double getTotalRotation() {
+        return totalRotation;
     }
 
 
@@ -135,12 +136,12 @@ public class TorctexServo {
                     startingAngle,
                     getVoltage(),
                     getCurrentAngle(),
-                    getPosition()
+                    getTotalRotation()
                 );
     }
 
 
-    @TeleOp(name = "Torctex Servo Analog In test", group = "test")
+    @TeleOp(name = "Torctex Servo Analog Input test", group = "test")
     public static class TorctexServoTest extends LinearOpMode {
         @Override
 
