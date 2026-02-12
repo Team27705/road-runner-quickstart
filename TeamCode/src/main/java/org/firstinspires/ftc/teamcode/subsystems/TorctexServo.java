@@ -27,6 +27,8 @@ public class TorctexServo {
 
     private double homeAngle;
 
+    private double angleDelta;
+
     //the positions
 
 
@@ -66,12 +68,12 @@ public class TorctexServo {
 //        return currentAngle - <  targetAngle;
 //    }
 
-    public void update() {
+    public synchronized void update() {
         // run this contionously
         //calculate unnormalized rotations in degrees
 //
         currentAngle = getCurrentAngle();
-        double angleDelta = currentAngle - previousAngle;
+        angleDelta = currentAngle - previousAngle;
 
 
         if (angleDelta > 180) {
@@ -88,7 +90,7 @@ public class TorctexServo {
 //        if (currentAngle != targetAngle) {
 //            setPower();
 //        }
-        previousAngle  = currentAngle;
+        previousAngle = currentAngle;
     }
 
     public double getVoltage () {
@@ -124,6 +126,10 @@ public class TorctexServo {
         return totalRotation;
     }
 
+    public double getAngleDelta () {
+        return angleDelta;
+    }
+
 
     @SuppressLint("DefaultLocale")
     public String log() {
@@ -132,14 +138,16 @@ public class TorctexServo {
                 "Starting Position: %.3f\n" +
                         "Voltage Reading: %.3f\n"+
                         "Current Angle: %.3f\n"+
-                        "Total angular Rotation: %.3f \n",
+                        "Total angular Rotation: %.3f \n"+
+                        "Angle Change: %.3f \n",
 //                        "Target Position: %.3\n"+
 //                        "Error: %.3\n",
 
                     startingAngle,
                     getVoltage(),
                     getCurrentAngle(),
-                    getTotalRotation()
+                    getTotalRotation(),
+                    getAngleDelta()
                 );
     }
 
@@ -155,28 +163,32 @@ public class TorctexServo {
             AnalogInput analogVoltageSignal = hardwareMap.get(AnalogInput.class, "rightHorizSlideEncoder");
 
             TorctexServo TRServo = new TorctexServo(sr, analogVoltageSignal);
-            ElapsedTime clock = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+            ElapsedTime clock = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
             double timeElapsed = 0;
             double start = 0;
 
+            double now = 0;
+            double last = 0;
 
             while (!isStopRequested()) {
                 TRServo.update();
                 if (gamepad1.aWasReleased()) {
                     clock.reset();
-                    start = clock.now(TimeUnit.SECONDS);
-                    TRServo.setServoPower(.5);
-
+                    start = clock.now(TimeUnit.MILLISECONDS);
+                    TRServo.setServoPower(1);
                 }
                 TRServo.update();
-                double end = clock.now(TimeUnit.SECONDS);
-                timeElapsed = clock.now(TimeUnit.SECONDS) - start;
+                now = clock.now(TimeUnit.MILLISECONDS);
+                timeElapsed = now - last;
                 telemetry.addLine(TRServo.log());
-                telemetry.addData("Time ms: %.3f", timeElapsed);
-                telemetry.addData("Velocity: %.3f", TRServo.getTotalRotation() / timeElapsed);
+                telemetry.addData("Time ms:", "%.3f", timeElapsed);
+                telemetry.addData("Velocity:", "%.3f", TRServo.getAngleDelta() / timeElapsed);
                 telemetry.update();
+                last = now;
 
             }
+
+            //doing clock / time inside of
 
 
         }
