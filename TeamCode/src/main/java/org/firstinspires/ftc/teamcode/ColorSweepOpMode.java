@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+@SuppressWarnings("unused")
 @TeleOp(name = "Test RGB Indicator - Color Sweep")
 public class ColorSweepOpMode extends LinearOpMode {
     @Override
