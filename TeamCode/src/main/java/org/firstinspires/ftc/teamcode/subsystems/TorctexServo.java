@@ -29,6 +29,8 @@ public class TorctexServo {
 
     private double angleDelta;
 
+    private int wraps; //tracks the number of times the encoder has wrapped around
+
     //the positions
 
 
@@ -49,6 +51,8 @@ public class TorctexServo {
     public TorctexServo (CRServo servo, AnalogInput analogInput) {
         trServo = servo;
         servoEncoder = analogInput;
+
+        wraps = 0;
 
         direction = DIRECTION.FORWARD;
 
@@ -71,17 +75,33 @@ public class TorctexServo {
     public synchronized void update() {
         // run this contionously
         //calculate unnormalized rotations in degrees
-//
+        //calculate total voltage instead then convert to angles then mod to by 360
+        //create a function to accumalte and invert the difference in voltage when direction is REVERESE
+        //cliffs from like 3.255 and 0.005
+        //0.55 - 3.255 ? like 4 degrees of inaccuracy 2 and 2 each side
+
         currentAngle = getCurrentAngle();
         angleDelta = currentAngle - previousAngle;
 
+        if (angleDelta < 300) { //this wont work when direction is negative
+            wraps++;
+        }
+        else if (angleDelta > -300) {
+            wraps--;
+        }
 
-        if (angleDelta > 180) {
-            totalRotation -= angleDelta -360;
-        }
-        else if (angleDelta < -180) {
-            totalRotation += angleDelta + 360;
-        }
+//        if (angleDelta > 180) {
+//            totalRotation -= angleDelta - 360;
+//        }
+//        else if (angleDelta < -180) {
+//            totalRotation += angleDelta + 360;
+//        }
+
+//        angleDelta = totalRotation - previousAngle;
+
+        totalRotation = angleDelta + (wraps * 360);
+
+        previousAngle = currentAngle;
 
 
         //include an interupt if the servo is already at the
@@ -90,8 +110,19 @@ public class TorctexServo {
 //        if (currentAngle != targetAngle) {
 //            setPower();
 //        }
-        previousAngle = currentAngle;
     }
+
+
+//    public void updateTotalVoltage () {
+//
+//
+//        if () {
+//
+//        }
+//        if () {
+//
+//        }
+//    }
 
     public double getVoltage () {
         //read the analog voltage of the Servo
@@ -175,7 +206,7 @@ public class TorctexServo {
                 if (gamepad1.aWasReleased()) {
                     clock.reset();
                     start = clock.now(TimeUnit.MILLISECONDS);
-                    TRServo.setServoPower(1);
+                    TRServo.setServoPower(.2);
                 }
                 TRServo.update();
                 now = clock.now(TimeUnit.MILLISECONDS);
