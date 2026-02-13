@@ -83,11 +83,11 @@ public class TorctexServo {
         currentAngle = getCurrentAngle();
         angleDelta = currentAngle - previousAngle;
 
-        if (angleDelta < 300) { //this wont work when direction is negative
-            wraps++;
-        }
-        else if (angleDelta > -300) {
+        if (angleDelta > 300) { //this wont work when direction is negative
             wraps--;
+        }
+        else if (angleDelta < -300) {
+            wraps++;
         }
 
 //        if (angleDelta > 180) {
