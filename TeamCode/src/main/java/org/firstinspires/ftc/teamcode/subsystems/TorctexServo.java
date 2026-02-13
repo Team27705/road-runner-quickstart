@@ -31,6 +31,8 @@ public class TorctexServo {
 
     private int wraps; //tracks the number of times the encoder has wrapped around
 
+    private boolean  initalized = false;
+
     //the positions
 
 
@@ -55,17 +57,13 @@ public class TorctexServo {
         wraps = 0;
 
         direction = DIRECTION.FORWARD;
-
-
-        initialize();
-
     }
 
     public void initialize() {
         trServo.setPower(0);
         previousAngle = getCurrentAngle();
-
         currentAngle = startingAngle;
+        initalized = true;
     }
 
 //    public boolean atPosition () {
@@ -80,14 +78,17 @@ public class TorctexServo {
         //cliffs from like 3.255 and 0.005
         //0.55 - 3.255 ? like 4 degrees of inaccuracy 2 and 2 each side
 
+        if (!initalized) return;
+
+
         currentAngle = getCurrentAngle();
         angleDelta = currentAngle - previousAngle;
 
         if (angleDelta > 300) { //this wont work when direction is negative
-            wraps--;
+            wraps++;
         }
         else if (angleDelta < -300) {
-            wraps++;
+            wraps--;
         }
 
 //        if (angleDelta > 180) {
@@ -206,8 +207,11 @@ public class TorctexServo {
                 if (gamepad1.aWasReleased()) {
                     clock.reset();
                     start = clock.now(TimeUnit.MILLISECONDS);
+                    TRServo.initialize();
                     TRServo.setServoPower(.2);
                 }
+
+
                 TRServo.update();
                 now = clock.now(TimeUnit.MILLISECONDS);
                 timeElapsed = now - last;
