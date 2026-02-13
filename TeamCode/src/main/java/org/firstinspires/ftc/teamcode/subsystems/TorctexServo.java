@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -32,6 +33,8 @@ public class TorctexServo {
     private int wraps; //tracks the number of times the encoder has wrapped around
 
     private boolean  initalized = false;
+
+    private ElapsedTime timer;
 
     //the positions
 
@@ -61,8 +64,9 @@ public class TorctexServo {
 
     public void initialize() {
         trServo.setPower(0);
+        trServo.setDirection(DcMotorSimple.Direction.FORWARD);
         previousAngle = getCurrentAngle();
-        currentAngle = startingAngle;
+        startingAngle = previousAngle;
         initalized = true;
     }
 
@@ -82,14 +86,20 @@ public class TorctexServo {
 
 
         currentAngle = getCurrentAngle();
+        if (clock > ) return;
+        else clock.reset
         angleDelta = currentAngle - previousAngle;
 
-        if (angleDelta > 300) { //this wont work when direction is negative
-            wraps++;
-        }
-        else if (angleDelta < -300) {
+        if (angleDelta > 300) { //this wont work when direction is negative, doesnt work for when the mode is set to Reverse
+            angleDelta -= 300;
             wraps--;
         }
+        else if (angleDelta < -300) {
+            angleDelta += 300;
+            wraps++;
+        }
+
+        angleDelta = Math.abs(angleDelta) * (direction == TorctexServo.DIRECTION.REVERSE ? -1 : 1);
 
 //        if (angleDelta > 180) {
 //            totalRotation -= angleDelta - 360;
@@ -100,9 +110,9 @@ public class TorctexServo {
 
 //        angleDelta = totalRotation - previousAngle;
 
-        totalRotation = angleDelta + (wraps * 360);
+        totalRotation = angleDelta - startingAngle + (wraps * 360);
 
-        previousAngle = currentAngle;
+        homeAngle = currentAngle;
 
 
         //include an interupt if the servo is already at the
@@ -135,7 +145,7 @@ public class TorctexServo {
 
     public double getCurrentAngle() {
         //takes the Analog Voltage Signal from the AnalogInput of the Servo to calculate the angle by normalizing it (divide by maximum voltage)
-        double angle = (int) ((getVoltage() / 3.3) * 360);
+        double angle = ((getVoltage() / 3.3) * 360);
         if (direction.equals(DIRECTION.REVERSE)) {
             angle = -1 * angle;
         }
@@ -169,15 +179,17 @@ public class TorctexServo {
         return String.format(
                 "Starting Position: %.3f\n" +
                         "Voltage Reading: %.3f\n"+
-                        "Current Angle: %.3f\n"+
+                        "Current Angle: %.9f\n"+
+                        "Previous Angle: %.9f\n"+
                         "Total angular Rotation: %.3f \n"+
-                        "Angle Change: %.3f \n",
+                        "Angle Change: %.9f \n",
 //                        "Target Position: %.3\n"+
 //                        "Error: %.3\n",
 
                     startingAngle,
                     getVoltage(),
-                    getCurrentAngle(),
+                    currentAngle,
+                    homeAngle,
                     getTotalRotation(),
                     getAngleDelta()
                 );
@@ -203,7 +215,8 @@ public class TorctexServo {
             double last = 0;
 
             while (!isStopRequested()) {
-                TRServo.update();
+
+
                 if (gamepad1.aWasReleased()) {
                     clock.reset();
                     start = clock.now(TimeUnit.MILLISECONDS);
@@ -211,8 +224,6 @@ public class TorctexServo {
                     TRServo.setServoPower(.2);
                 }
 
-
-                TRServo.update();
                 now = clock.now(TimeUnit.MILLISECONDS);
                 timeElapsed = now - last;
                 telemetry.addLine(TRServo.log());
@@ -220,6 +231,7 @@ public class TorctexServo {
                 telemetry.addData("Velocity:", "%.3f", TRServo.getAngleDelta() / timeElapsed);
                 telemetry.update();
                 last = now;
+                TRServo.update();
 
             }
 
