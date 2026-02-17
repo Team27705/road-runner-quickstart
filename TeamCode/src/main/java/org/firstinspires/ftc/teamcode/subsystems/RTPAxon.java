@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import android.annotation.SuppressLint;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -29,7 +30,10 @@ public class RTPAxon {
     // Accumulated rotation in degrees
     private double totalRotation;
     // Target rotation in degrees
-    private double targetRotation;
+
+    private static double targetRotation;
+
+    public static double TRACK_CURRENT_ANGLE;
 
     // PID controller coefficients and state
     private double kP;
@@ -96,16 +100,21 @@ public class RTPAxon {
         homeAngle = previousAngle;
 
         // Default PID coefficients
-        kP = 0.015;
-        kI = 0.0005;
+        kP = 0.025; //.015 oriignal .26
+        kI = 0.0000;
         kD = 0.0025;
         integralSum = 0.0;
         lastError = 0.0;
         maxIntegralSum = 100.0;
+//
+//        kP = 0;
+//        kI = 0;
+//        kD = 0;
+//        maxIntegralSum = 0;
         pidTimer = new ElapsedTime();
         pidTimer.reset();
 
-        maxPower = 0.25;
+        maxPower = 0.9; //.25 is deafult
         cliffs = 0;
     }
     // endregion
@@ -219,7 +228,7 @@ public class RTPAxon {
 
     // Increment target rotation by a value
     public void changeTargetRotation(double change) {
-        targetRotation += change;
+        targetRotation = change;
     }
 
     // Set target rotation and reset PID
@@ -266,6 +275,7 @@ public class RTPAxon {
     // Main update loop: updates rotation, computes PID, applies power
     public synchronized void update() {
         double currentAngle = getCurrentAngle();
+        TRACK_CURRENT_ANGLE = currentAngle; //for telem
         double angleDifference = currentAngle - previousAngle;
 
         // Handle wraparound at 0/360 degrees
@@ -278,7 +288,7 @@ public class RTPAxon {
         }
 
         // Update total rotation with wraparound correction
-        totalRotation = currentAngle - homeAngle + cliffs * 360;
+        totalRotation = currentAngle + cliffs * 360;
         previousAngle = currentAngle;
 
         if (!rtp) return;
@@ -315,7 +325,7 @@ public class RTPAxon {
         double output = pTerm + iTerm + dTerm;
 
         // Deadzone for output
-        final double DEADZONE = 0.5;
+        final double DEADZONE = 0.25;
         if (Math.abs(error) > DEADZONE) {
             double power = Math.min(maxPower, Math.abs(output)) * Math.signum(output);
             setPower(power);
@@ -333,7 +343,7 @@ public class RTPAxon {
                         "Total Rotation: %.2f\n" +
                         "Target Rotation: %.2f\n" +
                         "Current Power: %.3f\n" +
-                        "PID Values: P=%.3f I=%.3f D=%.3f\n" +
+                        "PID Values: P=%.3f I=%.3f D=%.4f\n" +
                         "PID Terms: Error=%.2f Integral=%.2f",
                 servoEncoder.getVoltage(),
                 getCurrentAngle(),
@@ -349,14 +359,14 @@ public class RTPAxon {
     // TeleOp test class for manual tuning and testing
     @TeleOp(name = "Cont. Rotation Axon Test", group = "test")
     public static class CRAxonTest extends LinearOpMode {
-
+        //label each slot 1 2 and 3 with tape and let 1 be the intake then determine the angles to change each slot from intake to outake
         @Override
         public void runOpMode() throws InterruptedException {
             telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
             CRServo crservo = hardwareMap.crservo.get("rightHorizSlide"); // CHANGE NAME
             AnalogInput encoder = hardwareMap.get(AnalogInput.class, "rightHorizSlideEncoder"); // CHANGE NAME
 //            GamepadPair gamepads = new GamepadPair(gamepad1, gamepad2);
-            Gamepad gamepad1 = new Gamepad();
+//            Gamepad gamepad1 = new Gamepad();
             RTPAxon servo = new RTPAxon(crservo, encoder);
 
             waitForStart();
@@ -366,38 +376,47 @@ public class RTPAxon {
                 servo.update();
 
                 // Manual controls for target and PID tuning
-                if (gamepad1.dpad_up) {
-                    servo.changeTargetRotation(15);
+                if (gamepad1.dpadUpWasReleased()) {
+                    servo.changeTargetRotation(0);
                 }
-                if (gamepad1.dpad_down) {
-                    servo.changeTargetRotation(-15);
+                if (gamepad1.dpadDownWasReleased()) {
+                    servo.changeTargetRotation(90);
                 }
-                if (gamepad1.x) {
-                    servo.setTargetRotation(0);
+                if (gamepad1.dpadLeftWasReleased()) {
+                    servo.changeTargetRotation(180);
+                }
+                if (gamepad1.dpadRightWasReleased()) {
+                    servo.changeTargetRotation(340);
                 }
 
-                if (gamepad1.y) {
+                if (gamepad1.xWasReleased()) {
+                    servo.changeTargetRotation(-180);
+                }
+
+                if (gamepad1.yWasReleased()) {
                     servo.setKP(servo.getKP() + 0.001);
                 }
-                if (gamepad1.a) {
+                if (gamepad1.aWasReleased()) {
                     servo.setKP(Math.max(0, servo.getKP() - 0.001));
                 }
 
-                if (gamepad1.right_bumper) {
-                    servo.setKI(servo.getKI() + 0.0001);
+                if (gamepad1.rightBumperWasReleased()) {
+                    servo.setKD(servo.getKD() + 0.0001);
                 }
-                if (gamepad1.left_bumper) {
-                    servo.setKI(Math.max(0, servo.getKI() - 0.0001));
+                if (gamepad1.leftBumperWasReleased()) {
+                    servo.setKD(Math.max(0, servo.getKD() - 0.0001));
                 }
 
-                if (gamepad1.b) {
+                if (gamepad1.bWasPressed()) {
                     servo.setKP(0.015);
-                    servo.setKI(0.0005);
+                    servo.setKI(0.0000);
                     servo.setKD(0.0025);
                     servo.resetPID();
                 }
 
                 telemetry.addData("Starting angle", servo.STARTPOS);
+                telemetry.addData("Target rotation", targetRotation);
+                telemetry.addData("Current Angle", TRACK_CURRENT_ANGLE);
                 telemetry.addLine(servo.log()); // debugging
                 telemetry.addData("NTRY", servo.ntry);
                 telemetry.update();
