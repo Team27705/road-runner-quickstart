@@ -16,25 +16,31 @@ import java.util.concurrent.TimeUnit;
 
 
 public class TorctexServo {
-
+    //make any variables you want to change on FTCDashboard a static
+    //
     private final CRServo trServo;
     private final AnalogInput servoEncoder;
     private double currentAngle;
     private double previousAngle;
     private double startingAngle; //last angle
-    private double targetAngle;
+    private double targetPosition;
     private double totalRotation; //the unnormalized vector, the total number of rotations
 
     private double homeAngle;
 
     private double angleDelta;
+    private double deadzone = 2;
 
     private int wraps; //tracks the number of times the encoder has wrapped around
 
     //the positions
+    //0.0091666666666667 volts per angle(encoder)
+    //5 volts per second or 545 degrees hypothetically
 
-
+    private double voltsPerDegree = 0.0091666666666667;
     private DIRECTION direction;
+
+    private ElapsedTime PIDTimer;
 
     public enum DIRECTION {
         REVERSE,
@@ -68,6 +74,15 @@ public class TorctexServo {
         currentAngle = startingAngle;
     }
 
+    public double rawVoltageReading () {
+        return servoEncoder.getVoltage();
+    }
+
+    public boolean atPosition () {
+        double angleDelta = currentAngle - targetPosition;
+        return  Math.abs(angleDelta) < deadzone;
+    }
+
 //    public boolean atPosition () {
 //        return currentAngle - <  targetAngle;
 //    }
@@ -79,16 +94,26 @@ public class TorctexServo {
         //create a function to accumalte and invert the difference in voltage when direction is REVERESE
         //cliffs from like 3.255 and 0.005
         //0.55 - 3.255 ? like 4 degrees of inaccuracy 2 and 2 each side
+        double dt = PIDTimer.seconds();
+        PIDTimer.reset();
+
+
+
+
 
         currentAngle = getCurrentAngle();
-        angleDelta = currentAngle - previousAngle;
+        angleDelta = currentAngle - targetPosition; //distance from target
 
-        if (angleDelta < 300) { //this wont work when direction is negative
-            wraps++;
-        }
-        else if (angleDelta > -300) {
+        if (angleDelta > 300) { //this wont work when direction is negative
+            angleDelta -= 360;
             wraps--;
         }
+        else if (angleDelta < -300) {
+            angleDelta += 360;
+            wraps++;
+        }
+
+        if (atPosition()) return; //checks if at current position, if not break and avoid running the PID
 
 //        if (angleDelta > 180) {
 //            totalRotation -= angleDelta - 360;
