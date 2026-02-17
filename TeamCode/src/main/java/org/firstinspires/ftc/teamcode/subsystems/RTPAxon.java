@@ -353,8 +353,8 @@ public class RTPAxon {
         @Override
         public void runOpMode() throws InterruptedException {
             telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-            CRServo crservo = hardwareMap.crservo.get("crservo"); // CHANGE NAME
-            AnalogInput encoder = hardwareMap.get(AnalogInput.class, "encoder"); // CHANGE NAME
+            CRServo crservo = hardwareMap.crservo.get("rightHorizSlide"); // CHANGE NAME
+            AnalogInput encoder = hardwareMap.get(AnalogInput.class, "rightHorizSlideEncoder"); // CHANGE NAME
 //            GamepadPair gamepads = new GamepadPair(gamepad1, gamepad2);
             Gamepad gamepad1 = new Gamepad();
             RTPAxon servo = new RTPAxon(crservo, encoder);
