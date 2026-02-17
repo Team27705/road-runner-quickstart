@@ -4,6 +4,8 @@ import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.har
 
 import android.annotation.SuppressLint;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -31,10 +33,11 @@ public class TorctexServo {
     private double angleDelta;
 
     private int wraps; //tracks the number of times the encoder has wrapped around
+    private static double ANGLE_DEADZONE = 5;
 
-    private boolean  initalized = false;
+    private boolean initalized = false;
 
-    private ElapsedTime timer;
+    private ElapsedTime PIDClock;
 
     //the positions
 
@@ -57,9 +60,8 @@ public class TorctexServo {
         trServo = servo;
         servoEncoder = analogInput;
 
-        wraps = 0;
-
         direction = DIRECTION.FORWARD;
+        initialize();
     }
 
     public void initialize() {
@@ -68,11 +70,21 @@ public class TorctexServo {
         previousAngle = getCurrentAngle();
         startingAngle = previousAngle;
         initalized = true;
+        wraps = 0;
     }
 
 //    public boolean atPosition () {
 //        return currentAngle - <  targetAngle;
 //    }
+
+    //checks if
+    public boolean atTargetPosition () {
+        return Math.abs(currentAngle - previousAngle) <= ANGLE_DEADZONE;
+    }
+
+    public double getTargetAngle () {
+        return targetAngle;
+    }
 
     public synchronized void update() {
         // run this contionously
@@ -82,35 +94,37 @@ public class TorctexServo {
         //cliffs from like 3.255 and 0.005
         //0.55 - 3.255 ? like 4 degrees of inaccuracy 2 and 2 each side
 
-        if (!initalized) return;
 
+
+        if (!atTargetPosition()) return;
 
         currentAngle = getCurrentAngle();
-        if (clock > ) return;
-        else clock.reset
         angleDelta = currentAngle - previousAngle;
 
-        if (angleDelta > 300) { //this wont work when direction is negative, doesnt work for when the mode is set to Reverse
-            angleDelta -= 300;
+        if (angleDelta > 300) { // this wont work when direction is negative, doesnt work for when the mode is set to Reverse
+            angleDelta -= 360; // counterclockwise, angle delta should be negative since cw is traveling backwards and subtracting from
             wraps--;
         }
         else if (angleDelta < -300) {
-            angleDelta += 300;
+            angleDelta += 360; //clockwise
             wraps++;
         }
 
-        angleDelta = Math.abs(angleDelta) * (direction == TorctexServo.DIRECTION.REVERSE ? -1 : 1);
-
-//        if (angleDelta > 180) {
-//            totalRotation -= angleDelta - 360;
-//        }
-//        else if (angleDelta < -180) {
-//            totalRotation += angleDelta + 360;
-//        }
-
-//        angleDelta = totalRotation - previousAngle;
+        angleDelta = Math.abs(angleDelta) * (direction == TorctexServo.DIRECTION.REVERSE ? -1 : 1); //if the direction is ever set to reverse then this will account for it, no impact if its set to forward
 
         totalRotation = angleDelta - startingAngle + (wraps * 360);
+
+
+        double dt = PIDClock.milliseconds(); //reminder to convert to seconds later
+        PIDClock.reset();
+
+        if (dt < 0.001 || dt > 1.0) {
+            return;
+        }
+
+
+        //calculate difference in error over time you already have dt, therefore you have D now
+        // P is uh?????
 
         homeAngle = currentAngle;
 
@@ -205,9 +219,11 @@ public class TorctexServo {
             waitForStart();
             CRServo sr = hardwareMap.get(CRServo.class, "rightHorizSlide");
             AnalogInput analogVoltageSignal = hardwareMap.get(AnalogInput.class, "rightHorizSlideEncoder");
-
             TorctexServo TRServo = new TorctexServo(sr, analogVoltageSignal);
+
             ElapsedTime clock = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+
+            telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
             double timeElapsed = 0;
             double start = 0;
 
@@ -220,18 +236,32 @@ public class TorctexServo {
                 if (gamepad1.aWasReleased()) {
                     clock.reset();
                     start = clock.now(TimeUnit.MILLISECONDS);
-                    TRServo.initialize();
                     TRServo.setServoPower(.2);
+                }
+                
+                if (gamepad1.xWasReleased()) {
+
+                }
+                if (gamepad1.yWasReleased() ){
+
+                }
+                if (gamepad1.bWasReleased()) {
+
                 }
 
                 now = clock.now(TimeUnit.MILLISECONDS);
                 timeElapsed = now - last;
                 telemetry.addLine(TRServo.log());
-                telemetry.addData("Time ms:", "%.3f", timeElapsed);
-                telemetry.addData("Velocity:", "%.3f", TRServo.getAngleDelta() / timeElapsed);
+                telemetry.addData("Time ms: ", "%.3f", timeElapsed);
+                telemetry.addData("Velocity: ", "%.3f", TRServo.getAngleDelta() / timeElapsed);
+                telemetry.addData("Target Angle: ","%.3f", TRServo.getTargetAngle());
                 telemetry.update();
                 last = now;
                 TRServo.update();
+
+
+
+
 
             }
 
