@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.LLStatus;
@@ -170,6 +171,106 @@ public class Limelight {
         closeLimeLight();
 
         return found;
+    }
+
+    /**
+     * Read the first AprilTag fiducial and convert the reading into a 2D vector
+     * pointing from the AprilTag to the Limelight (camera) in inches.
+     *
+     * Coordinates / conventions:
+     * - Returned Vector2d uses the project's RoadRunner convention where
+     *   x = forward distance (positive forward), y = left offset (positive left).
+     * - The calculation uses the fiducial result's horizontal and vertical target
+     *   angles (degrees) to estimate range using simple trigonometry:
+     *     distance = (tagHeight - cameraHeight) / tan(verticalAngle)
+     *   and lateral offset = distance * tan(horizontalAngle).
+     * - Horizontal angle (tx) from Limelight is typically positive to the right;
+     *   to convert to RoadRunner's positive-left Y we negate the lateral component.
+     *
+     * Assumptions & failure modes:
+     * - Caller must supply tag and camera heights in inches (same units).
+     * - If no valid fiducial is found or the geometry is degenerate (vertical
+     *   angle near zero), the method returns null.
+     * - This is an approximation that assumes the tag and camera are roughly
+     *   level and that the vertical angle provided is the elevation angle to the
+     *   tag center.
+     *
+     * @param tagHeightInches AprilTag center height above the ground (inches)
+     * @param cameraHeightInches Limelight/camera center height above the ground (inches)
+     * @return Vector2d from AprilTag -> Limelight in inches (x forward, y left), or null
+     */
+    public Vector2d getLimelightVectorFromAprilTag(double tagHeightInches, double cameraHeightInches) {
+        // Start and switch to APRILTAGGER pipeline (matches other helper methods)
+        startLimelight();
+        Pipelines prior = getPipeline();
+        setPipeline(Pipelines.APRILTAGGER);
+
+        LLResult llResult = getLatestResult();
+        Vector2d vec = null;
+
+        if (llResult != null && llResult.isValid()) {
+            java.util.List<LLResultTypes.FiducialResult> fiducials = llResult.getFiducialResults();
+            if (fiducials != null && !fiducials.isEmpty()) {
+                LLResultTypes.FiducialResult fr = fiducials.get(0);
+                double txDeg = fr.getTargetXDegrees();
+                double tyDeg = fr.getTargetYDegrees();
+
+                // Convert to radians
+                double tx = Math.toRadians(txDeg);
+                double ty = Math.toRadians(tyDeg);
+
+                // Avoid division by zero for near-horizontal sightings
+                double tanTy = Math.tan(ty);
+                if (Math.abs(tanTy) > 1e-6) {
+                    // Estimate forward range from vertical angle and known height difference
+                    double range = (tagHeightInches - cameraHeightInches) / tanTy;
+
+                    // Lateral offset: positive to the right from Limelight API; convert
+                    // to RoadRunner positive-left by negating.
+                    double lateral = range * Math.tan(tx);
+                    double rrY = -lateral; // left
+
+                    vec = new Vector2d(range, rrY);
+                }
+            }
+        }
+
+        // Restore pipeline and close limelight (keep behavior consistent)
+        if (prior != null) setPipeline(prior);
+        closeLimeLight();
+
+        return vec;
+    }
+
+    /**
+     * Read the latest Limelight observation (no pipeline switching or start/stop)
+     * and convert the first fiducial into a 2D vector from AprilTag -> Limelight.
+     * This variant is intended for high-frequency loops where the caller has
+     * already started the Limelight and selected the desired pipeline.
+     *
+     * @see #getLimelightVectorFromAprilTag(double,double)
+     */
+    public Vector2d getLimelightVectorFromLatestObservation(double tagHeightInches, double cameraHeightInches) {
+        LLResult llResult = getLatestResult();
+        if (llResult == null || !llResult.isValid()) return null;
+
+        java.util.List<LLResultTypes.FiducialResult> fiducials = llResult.getFiducialResults();
+        if (fiducials == null || fiducials.isEmpty()) return null;
+
+        LLResultTypes.FiducialResult fr = fiducials.get(0);
+        double txDeg = fr.getTargetXDegrees();
+        double tyDeg = fr.getTargetYDegrees();
+
+        double tx = Math.toRadians(txDeg);
+        double ty = Math.toRadians(tyDeg);
+        double tanTy = Math.tan(ty);
+        if (Math.abs(tanTy) <= 1e-6) return null;
+
+        double range = (tagHeightInches - cameraHeightInches) / tanTy;
+        double lateral = range * Math.tan(tx);
+        double rrY = -lateral;
+
+        return new Vector2d(range, rrY);
     }
 
     public enum Motif {
