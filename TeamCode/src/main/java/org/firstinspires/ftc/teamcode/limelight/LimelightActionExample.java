@@ -27,7 +27,7 @@ public class LimelightActionExample extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         // Initialize hardware
         Pose2d beginPose = new Pose2d(new Vector2d(-60.0, 37), Math.toRadians(0));
-        MecanumDrive drive = new MecanumDrive(hardwareMap, beginPose);
+//        MecanumDrive drive = new MecanumDrive(hardwareMap, beginPose);
         Limelight limelight = new Limelight(hardwareMap);
 
         telemetry.addData("Status", "Initialized");

@@ -52,16 +52,8 @@ public class NewSpindexer {
         //update spindexer PID
         spindexer.update();
 
-        if (isFull()) {
-
-            return;
-        }
-        updateColorSensor();
-        if (!detectGreen() || !detectPurple()) return; //no colors detected do not spin
-        if () {
-
-        }
-
+//        if (!detectGreen() || !detectPurple) return; //no colors detected do nothing
+//
 //        if (bootkicker.)
         //if color is detected, then set targetPosition of Spindexer
 
@@ -70,17 +62,11 @@ public class NewSpindexer {
 //    public bootkicker
 
     public boolean detectGreen () {
-        if () {
-
-        }
-        return false;
+    return false;
     }
 
     public boolean detectPurple () {
-        if () {
-
-        }
-        return true;
+    return false;
     }
 
 
