@@ -48,6 +48,8 @@ public class RTPTorctex {
     public int cliffs = 0;
     public double homeAngle;
 
+    private boolean atPos;
+
     // Direction enum for servo
     public enum Direction {
         FORWARD,
@@ -270,6 +272,10 @@ public class RTPTorctex {
         integralSum = 0;
     }
 
+    public boolean isAtTargetPos () {
+        return atPos;
+    }
+
     // Main update loop: updates rotation, computes PID, applies power
     public synchronized void update() {
         double currentAngle = getCurrentAngle();
@@ -325,10 +331,13 @@ public class RTPTorctex {
         // Deadzone for output
         final double DEADZONE = 0.25;
         if (Math.abs(error) > DEADZONE) {
+
             double power = Math.min(maxPower, Math.abs(output)) * Math.signum(output);
             setPower(power);
+            atPos = false;
         } else {
             setPower(0);
+            atPos = true;
         }
     }
 
