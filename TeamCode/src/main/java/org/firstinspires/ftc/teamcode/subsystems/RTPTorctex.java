@@ -361,8 +361,8 @@ public class RTPTorctex {
         @Override
         public void runOpMode() throws InterruptedException {
             telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-            CRServo crservo = hardwareMap.crservo.get("rightHorizSlide"); // CHANGE NAME
-            AnalogInput encoder = hardwareMap.get(AnalogInput.class, "rightHorizSlideEncoder"); // CHANGE NAME
+            CRServo crservo = hardwareMap.crservo.get("Spindexer Servo"); // CHANGE NAME
+            AnalogInput encoder = hardwareMap.get(AnalogInput.class, "Spindexer Encoder"); // CHANGE NAME
 //            GamepadPair gamepads = new GamepadPair(gamepad1, gamepad2);
 //            Gamepad gamepad1 = new Gamepad();
             RTPTorctex servo = new RTPTorctex(crservo, encoder);
