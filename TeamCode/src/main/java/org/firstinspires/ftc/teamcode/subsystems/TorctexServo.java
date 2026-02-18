@@ -210,7 +210,7 @@ public class TorctexServo {
     }
 
 
-    @TeleOp(name = "Torctex Servo Analog Input test", group = "test")
+    @TeleOp(name = "Torctex", group = "test")
     public static class TorctexServoTest extends LinearOpMode {
         @Override
 

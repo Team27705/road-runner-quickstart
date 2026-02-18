@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.tuning;
+package org.firstinspires.ftc.teamcode.roadrunnerDefaults.tuning;
 
 import androidx.annotation.NonNull;
 
@@ -41,11 +41,11 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
-import org.firstinspires.ftc.teamcode.roadrunnerDefaults.OTOSLocalizer;
+import org.firstinspires.ftc.teamcode.roadrunnerDefaults.localizers.OTOSLocalizer;
 import org.firstinspires.ftc.teamcode.PinpointLocalizer;
-import org.firstinspires.ftc.teamcode.roadrunnerDefaults.TankDrive;
-import org.firstinspires.ftc.teamcode.roadrunnerDefaults.ThreeDeadWheelLocalizer;
-import org.firstinspires.ftc.teamcode.roadrunnerDefaults.TwoDeadWheelLocalizer;
+import org.firstinspires.ftc.teamcode.roadrunnerDefaults.localizers.TankDrive;
+import org.firstinspires.ftc.teamcode.roadrunnerDefaults.localizers.ThreeDeadWheelLocalizer;
+import org.firstinspires.ftc.teamcode.roadrunnerDefaults.localizers.TwoDeadWheelLocalizer;
 
 import java.util.ArrayList;
 import java.util.Arrays;

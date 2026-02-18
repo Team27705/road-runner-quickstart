@@ -3,16 +3,14 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import android.annotation.SuppressLint;
 
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-public class RTPAxon {
+//singultech
+public class RTPTorctex {
     // Encoder for servo position feedback
     private final AnalogInput servoEncoder;
     // Continuous rotation servo
@@ -59,7 +57,7 @@ public class RTPAxon {
     // region constructors
 
     // Basic constructor, defaults to FORWARD direction
-    public RTPAxon(CRServo servo, AnalogInput encoder) {
+    public RTPTorctex(CRServo servo, AnalogInput encoder) {
         rtp = true;
         this.servo = servo;
         servoEncoder = encoder;
@@ -68,7 +66,7 @@ public class RTPAxon {
     }
 
     // Constructor with explicit direction
-    public RTPAxon(CRServo servo, AnalogInput encoder, Direction direction) {
+    public RTPTorctex(CRServo servo, AnalogInput encoder, Direction direction) {
         this(servo, encoder);
         this.direction = direction;
         initialize();
@@ -357,8 +355,8 @@ public class RTPAxon {
     }
 
     // TeleOp test class for manual tuning and testing
-    @TeleOp(name = "Cont. Rotation Axon Test", group = "test")
-    public static class CRAxonTest extends LinearOpMode {
+    @TeleOp(name = "Torctex PID Test", group = "test")
+    public static class CRTorctexTest extends LinearOpMode {
         //label each slot 1 2 and 3 with tape and let 1 be the intake then determine the angles to change each slot from intake to outake
         @Override
         public void runOpMode() throws InterruptedException {
@@ -367,7 +365,7 @@ public class RTPAxon {
             AnalogInput encoder = hardwareMap.get(AnalogInput.class, "rightHorizSlideEncoder"); // CHANGE NAME
 //            GamepadPair gamepads = new GamepadPair(gamepad1, gamepad2);
 //            Gamepad gamepad1 = new Gamepad();
-            RTPAxon servo = new RTPAxon(crservo, encoder);
+            RTPTorctex servo = new RTPTorctex(crservo, encoder);
 
             waitForStart();
 
