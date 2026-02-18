@@ -44,6 +44,9 @@ public class NewSpindexer {
 
     private Spindexermode mode;
 
+    private int[] intakePositions = {30,180,330};//index 0 is the degree to send slot 1 to intake, etc //150ish jumps each time might be lower
+    private int[] outTakePositions = {}; //index 0 is the degree to send slot 1 to outtake, etc
+    private int currentSlot;
     //Angle Rotations for intake:
     //Slot 1: 60?
     //slot 2; 120?
@@ -96,14 +99,19 @@ public class NewSpindexer {
         if (!spindexer.isAtTargetPos()) return;
 
         updateColorSensor();
-        if (!detectGreen() || !detectPurple()) return; //no colors detected do not spin
+
+        //no colors detected do not spin
         //two modes, one for feeding the spindexer, one for sending it to outtake
         //switch them with a boolean that gets updated from controller buttons or the auto sets the variables
         if (mode == Spindexermode.Intake ) {
-
+            if (!getColor().equals("E")) {
+                feedFromIntake();
+            }
         }
         else if (mode == Spindexermode.Outtake) {
-
+//            if () {
+//
+//            }
         }
         //set target?
 //        if (bootkicker.)
@@ -128,20 +136,50 @@ public class NewSpindexer {
 //            return;
 //        }
         for (int i = 0; i < 3; i++) {
-            if (!inventory[i].equals("E")) {
-
+            if (inventory[i].equals("E")) {
+                spindexer.changeTargetRotation(intakePositions[i]);
+                currentSlot = i;
+                inventory[currentSlot] = getColor();
+                return;
             }
         }
+    }
+
+    public String getColor () {
+
+        if () {
+            return "G";
+        }
+        else if () {
+            return "P";
+        }
+        else {
+            return "E";
+        }
+        return "P";
     }
 
     public void goToOuttake () {
         if (motif == null) motif = new String[] {"P", "G", "P"};
         for (int i = 0; i < 3; i++) {
-            if (inventory[i].equals(motif)) {
+            if (!checkInventory(i)) {
 
             }
         }
+
     }
+
+    public boolean checkInventory (int targetColor) {
+        for (int j = 0; j < 3; j++) {
+            if (inventory[j].equals(motif[targetColor])) {
+                spindexer.changeTargetRotation();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void
 
 //    public void kick () {
 //        bootkicker.setPosition(.75);
@@ -171,21 +209,21 @@ public class NewSpindexer {
 
 //    public bootkicker
 
-    public boolean detectGreen () {
-        if () {
-            inventory[]
-            return true;
-        }
-        return false;
-    }
-
-    public boolean detectPurple () {
-        if () {
-            inventory[]
-            return true;
-        }
-        return false;
-    }
+//    public boolean detectGreen () {
+//        if () {
+//            inventory[]
+//            return true;
+//        }
+//        return false;
+//    }
+//
+//    public boolean detectPurple () {
+//        if () {
+//            inventory[]
+//            return true;
+//        }
+//        return false;
+//    }
 
 
     public void updateColorSensor() {
