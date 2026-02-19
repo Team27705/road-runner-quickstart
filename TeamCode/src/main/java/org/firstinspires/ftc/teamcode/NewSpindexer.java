@@ -44,8 +44,8 @@ public class NewSpindexer {
 
     private Spindexermode mode;
 
-    private int[] intakePositions = {30,180,330};//index 0 is the degree to send slot 1 to intake, etc //150ish jumps each time might be lower
-    private int[] outTakePositions = {}; //index 0 is the degree to send slot 1 to outtake, etc
+    private int[] intakePositions = {60,180,330};//index 0 is the degree to send slot 1 to intake, etc //150ish jumps each time might be lower
+    private int[] outTakePositions = {270, 150, 30}; //index 0 is the degree to send slot 1 to outtake, etc
     private int currentSlot;
     //Angle Rotations for intake:
     //Slot 1: 60?
@@ -55,6 +55,7 @@ public class NewSpindexer {
     //Angle Rotations for Outtake/under flywheel
     //slot 1: 200 or 220??
     //slot 2:
+    //slot 3: 30
 
 
 
@@ -91,10 +92,10 @@ public class NewSpindexer {
         //update spindexer PID
         spindexer.update();
 
-        if (!kickerIsBlocking()) {
-            resetKicker();
-            return;
-        }
+//        if (!kickerIsBlocking()) {
+//            resetKicker();
+//            return;
+//        }
 
         if (!spindexer.isAtTargetPos()) return;
 
@@ -147,16 +148,15 @@ public class NewSpindexer {
 
     public String getColor () {
 
-        if () {
+        if (false) {
             return "G";
         }
-        else if () {
+        else if (false) {
             return "P";
         }
         else {
             return "E";
         }
-        return "P";
     }
 
     public void goToOuttake () {
@@ -172,14 +172,12 @@ public class NewSpindexer {
     public boolean checkInventory (int targetColor) {
         for (int j = 0; j < 3; j++) {
             if (inventory[j].equals(motif[targetColor])) {
-                spindexer.changeTargetRotation();
+                spindexer.changeTargetRotation(outTakePositions[j]);
                 return true;
             }
         }
         return false;
     }
-
-    public void
 
 //    public void kick () {
 //        bootkicker.setPosition(.75);
