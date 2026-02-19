@@ -26,20 +26,20 @@ public class Limelight {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.setPollRateHz(100);
         limelight.start();
-        limelight.pipelineSwitch(Pipelines.APRILTAGGER.getValue());
+        switchPipeline(Pipelines.APRILTAGGER);
     }
 
     @NonNull
-    private static Pose2d getPose2d(LLResult result, double robotYaw) throws MT2CalculationFailedException, MT2PositionIsZeroedException {
+    private static Pose2d getPose2d(LLResult result, double robotYaw) throws MT2FailedException, MT2ZeroedPosException {
         Pose3D botpose_mt2 = result.getBotpose_MT2();
         if (botpose_mt2 == null) {
-            throw new MT2CalculationFailedException("Limelight failed to calculate botpose_mt2!");
+            throw new MT2FailedException("Limelight failed to calculate botpose_mt2!");
         }
         double rawX = botpose_mt2.getPosition().x;
         double rawY = botpose_mt2.getPosition().y;
 
         if (rawX == 0.0 && rawY == 0.0) {
-            throw new MT2PositionIsZeroedException(
+            throw new MT2ZeroedPosException(
                     "Limelight botpose_mt2 position is zeroed, the limelight wasn't confident in its calculation and returned 0.0 for both X and Y."
             );
         }
@@ -67,7 +67,7 @@ public class Limelight {
         return limelight.getLatestResult();
     }
 
-    public Pose2d getRobotPoseFromAprilTag() throws NoAprilTagDetectedException, MT2CalculationFailedException, MT2PositionIsZeroedException {
+    public Pose2d getRobotPoseFromAprilTag() throws NoAprilTagException, MT2FailedException, MT2ZeroedPosException {
         limelight.start();
         switchPipeline(Pipelines.APRILTAGGER);
 
@@ -82,7 +82,7 @@ public class Limelight {
             LLResult result = getLatestResult();
 
             if (result == null || !result.isValid() || result.getFiducialResults().isEmpty()) {
-                throw new NoAprilTagDetectedException("No AprilTags detected!");
+                throw new NoAprilTagException("No AprilTags detected!");
             }
 
             return getPose2d(result, robotYaw);
@@ -106,20 +106,20 @@ public class Limelight {
         }
     }
 
-    public static class NoAprilTagDetectedException extends Exception {
-        public NoAprilTagDetectedException(String message) {
+    public static class NoAprilTagException extends Exception {
+        public NoAprilTagException(String message) {
             super(message);
         }
     }
 
-    public static class MT2CalculationFailedException extends Exception {
-        public MT2CalculationFailedException(String message) {
+    public static class MT2FailedException extends Exception {
+        public MT2FailedException(String message) {
             super(message);
         }
     }
 
-    public static class MT2PositionIsZeroedException extends Exception {
-        public MT2PositionIsZeroedException(String message) {
+    public static class MT2ZeroedPosException extends Exception {
+        public MT2ZeroedPosException(String message) {
             super(message);
         }
     }
