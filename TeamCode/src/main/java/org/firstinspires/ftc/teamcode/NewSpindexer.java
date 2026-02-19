@@ -48,6 +48,9 @@ public class NewSpindexer {
     private int[] intakePositions = {60,180,330};//index 0 is the degree to send slot 1 to intake, etc //150ish jumps each time might be lower
     private int[] outTakePositions = {270, 150, 30}; //index 0 is the degree to send slot 1 to outtake, etc
     private int currentSlot;
+    public String x;
+
+    public String posState;
     //Angle Rotations for intake:
     //Slot 1: 60?
     //slot 2; 120?
@@ -100,15 +103,26 @@ public class NewSpindexer {
             kickerIsRunning = false;
             initalize = true;
         }
-        spindexer.update();
+
+
+
         //update spindexer PID
-        if (kickerIsRunning || bootkickerClock.milliseconds() < 200)  return;
+        if (kickerIsRunning || bootkickerClock.milliseconds() < 500)  {
+            x = "breaking";
+            return;
+        }
+        x = "not breaking";
 
-
-
-        if (!spindexer.isAtTargetPos()) return;
+        spindexer.update();
+        if (Math.abs(spindexer.getPower()) > .1) {
+            posState = "not at pos";
+            return;
+        }
+        posState = "at pos";
 
         updateColorSensor();
+
+
 
         //no colors detected do not spin
         //two modes, one for feeding the spindexer, one for sending it to outtake
@@ -188,7 +202,7 @@ public class NewSpindexer {
     }
 
     public void resetServo () {
-        if (bootkicker.getPosition() != 0 && bootkickerTimeOut.milliseconds() >= 1000) {
+        if (bootkicker.getPosition() != 0 && bootkickerTimeOut.milliseconds() >= 500) {
             bootkicker.setPosition(0);
             bootkickerClock.reset();
             kickerIsRunning = false;
@@ -196,7 +210,7 @@ public class NewSpindexer {
     }
 
     public void kick () {
-        if (bootkicker.getPosition() != .45 && bootkickerClock.milliseconds() >= 1000) {
+        if (bootkicker.getPosition() != .45 && bootkickerClock.milliseconds() >= 500) {
             bootkicker.setPosition(.45);
             bootkickerTimeOut.reset();
         }
@@ -274,7 +288,7 @@ public class NewSpindexer {
                     "Blue: %.10f\n"+
                             "BootkickerClock: %.3f\n"
                             +"BootkickerTimeout: %.3f\n"+
-                    "kickerIsRunning: ",
+                    "kickerIsRunning: \n",
 
                     RGB[0],
                     RGB[1],
@@ -306,7 +320,9 @@ public class NewSpindexer {
                 }
 
                 telemetry.addLine(newSpindexer.log());
-
+                telemetry.addData("x: ",newSpindexer.x);
+                telemetry.addData("Pos State: ", newSpindexer.posState);
+                telemetry.addData("Spindexer Power", newSpindexer.spindexer.getPower());
                 telemetry.update();
             }
         }
