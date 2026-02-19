@@ -82,16 +82,16 @@ public class Limelighter {
         return limelight.getLatestResult();
     }
 
-    public Pose2d getRobotPoseFromAprilTag() throws NoAprilTagException, MT2FailedException, MT2ZeroedPosException {
+    public Pose2d getRobotPoseFromAprilTag(double yaw) throws NoAprilTagException, MT2FailedException, MT2ZeroedPosException {
         limelight.start();
         switchPipeline(Pipelines.APRILTAGGER);
 
         try {
-            MecanumDrive drive = hardwareMap.get(MecanumDrive.class, "drive");
-            double robotYaw = drive.lazyImu.get().getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+//            MecanumDrive drive = hardwareMap.get(MecanumDrive.class, "drive");
+//            double robotYaw = drive.lazyImu.get().getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
             // give limelight the yaw so it can do its thing
-            limelight.updateRobotOrientation(Math.toDegrees(robotYaw));
+            limelight.updateRobotOrientation(Math.toDegrees(yaw));
 
             // get data after orientation update
             LLResult result = getLatestResult();
@@ -100,7 +100,7 @@ public class Limelighter {
                 throw new NoAprilTagException("No AprilTags detected!");
             }
 
-            return getPose2d(result, robotYaw);
+            return getPose2d(result, yaw);
         } finally {
             // Always stop to avoid keeping the camera active after a query.
             limelight.stop();
