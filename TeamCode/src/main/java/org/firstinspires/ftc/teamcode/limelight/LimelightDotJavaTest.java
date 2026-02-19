@@ -31,7 +31,7 @@ public class LimelightDotJavaTest extends LinearOpMode {
                     RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                     RevHubOrientationOnRobot.UsbFacingDirection.UP
             )));
-            double robotYaw = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            double robotYaw = Math.toDegrees(imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
 
             telemetry.addData("Limelight Status", "Initialized");
             telemetry.update();
@@ -39,7 +39,7 @@ public class LimelightDotJavaTest extends LinearOpMode {
             // Use the helper to get the first detected AprilTag fiducial (or null)
             Pose2d fr = null;
             try {
-                fr = limelight.getRobotPoseFromAprilTag(robotYaw);
+                fr = limelight.getRobotPoseFromAprilTag(Math.toDegrees(robotYaw));
             } catch (Exception e) {
                 telemetry.addData("Exception Thrown", e.getMessage());
                 telemetry.update();
