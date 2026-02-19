@@ -53,6 +53,21 @@ public class Limelight {
         return new Pose2d(new Vector2d(x_in, y_in), robotYaw);
     }
 
+    public void startLimelight() throws IllegalStateException {
+        if (limelight == null) {
+            throw new IllegalStateException("Limelight hardware not initialized!");
+        }
+        limelight.setPollRateHz(100);
+        limelight.start();
+    }
+
+    public void stopLimelight() throws IllegalStateException {
+        if (limelight == null) {
+            throw new IllegalStateException("Limelight hardware not initialized!");
+        }
+        limelight.stop();
+    }
+
     public void switchPipeline(Pipelines pipeline) throws IllegalArgumentException {
         if (pipeline == null) {
             throw new IllegalArgumentException("Pipeline cannot be null!");
