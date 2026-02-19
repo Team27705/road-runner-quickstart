@@ -34,8 +34,9 @@ public class NewSpindexer {
     private ElapsedTime bootkickerTimeOut;
 
     private boolean bootkickerDown;
+    private boolean kickerIsRunning;
 
-    private boolean initalize;
+    private static boolean initalize;
 
     private enum Spindexermode {
         Intake,
@@ -89,13 +90,15 @@ public class NewSpindexer {
 
 
     public void update() {
-        //update spindexer PID
-        spindexer.update();
 
-//        if (!kickerIsBlocking()) {
-//            resetKicker();
-//            return;
-//        }
+        if (!initalize) {
+            bootkicker.setPosition(0);
+            initalize = true;
+        }
+        //update spindexer PID
+        if (!kickerIsRunning) return;
+
+        spindexer.update();
 
         if (!spindexer.isAtTargetPos()) return;
 
@@ -179,6 +182,19 @@ public class NewSpindexer {
         return false;
     }
 
+    public void requestKickAction () {
+
+        if (bootkicker.getPosition() == 0) {
+            bootkicker.setPosition(.75);
+            bootkickerClock.reset();
+        }
+        else if (bootkickerClock.milliseconds() >= 200 && bootkicker.getPosition() == .75 ) {
+            bootkicker.setPosition(0);
+        }
+        if (bootkicker.getPosition() == 0 && bootkickerClock.milliseconds() >= 400 ) {
+            kickerIsRunning = false;
+        }
+    }
 //    public void kick () {
 //        bootkicker.setPosition(.75);
 //        bootkickerTimeOut.reset();
@@ -248,9 +264,11 @@ public class NewSpindexer {
                     "Red: %.10f\n"+
                     "Green: %.10f\n"+
                     "Blue: %.10f\n",
+                    "kickerIsRunning",
                     RGB[0],
                     RGB[1],
-                    RGB[2]
+                    RGB[2],
+                    kickerIsRunning
             );
         }
 
@@ -266,6 +284,11 @@ public class NewSpindexer {
 
             while (!isStopRequested()) {
                 newSpindexer.update();
+
+                if (gamepad1.aWasReleased()) {
+                    newSpindexer.requestKickAction();
+                }
+
                 telemetry.addLine(newSpindexer.log());
 
                 telemetry.update();
