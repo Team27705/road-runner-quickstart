@@ -29,9 +29,9 @@ public class NewSpindexer {
 
     private double[] RGB = {0,0,0};
 
-    private ElapsedTime bootkickerClock;
+    private ElapsedTime bootkickerClock = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
-    private ElapsedTime bootkickerTimeOut;
+    private ElapsedTime bootkickerTimeOut = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
     private boolean bootkickerDown;
     private boolean kickerIsRunning;
@@ -69,6 +69,8 @@ public class NewSpindexer {
 
         bootkicker = hardwareMap.get(Servo.class, "bootkicker");
 
+        bootkicker.setDirection(Servo.Direction.REVERSE);
+
         colorSensor = hardwareMap.get(RevColorSensorV3.class, "colorSensor");
 
         if (auto) {
@@ -79,8 +81,7 @@ public class NewSpindexer {
             mode = Spindexermode.Intake;
         }
 
-        bootkickerClock.milliseconds();
-        bootkickerTimeOut.milliseconds();
+
         initalize = false;
     }
 
@@ -91,14 +92,19 @@ public class NewSpindexer {
 
     public void update() {
 
+
         if (!initalize) {
             bootkicker.setPosition(0);
+            bootkickerClock.reset();
+            bootkickerTimeOut.reset();
+            kickerIsRunning = false;
             initalize = true;
         }
-        //update spindexer PID
-        if (!kickerIsRunning) return;
-
         spindexer.update();
+        //update spindexer PID
+        if (kickerIsRunning || bootkickerClock.milliseconds() < 200)  return;
+
+
 
         if (!spindexer.isAtTargetPos()) return;
 
@@ -120,7 +126,6 @@ public class NewSpindexer {
         //set target?
 //        if (bootkicker.)
         //if color is detected, then set targetPosition of Spindexer
-
     }
 
     public void setMotif (int motifTagNum) { //may not be needed
@@ -182,18 +187,21 @@ public class NewSpindexer {
         return false;
     }
 
-    public void requestKickAction () {
-
-        if (bootkicker.getPosition() == 0) {
-            bootkicker.setPosition(.75);
-            bootkickerClock.reset();
-        }
-        else if (bootkickerClock.milliseconds() >= 200 && bootkicker.getPosition() == .75 ) {
+    public void resetServo () {
+        if (bootkicker.getPosition() != 0 && bootkickerTimeOut.milliseconds() >= 1000) {
             bootkicker.setPosition(0);
-        }
-        if (bootkicker.getPosition() == 0 && bootkickerClock.milliseconds() >= 400 ) {
+            bootkickerClock.reset();
             kickerIsRunning = false;
         }
+    }
+
+    public void kick () {
+        if (bootkicker.getPosition() != .45 && bootkickerClock.milliseconds() >= 1000) {
+            bootkicker.setPosition(.45);
+            bootkickerTimeOut.reset();
+        }
+
+
     }
 //    public void kick () {
 //        bootkicker.setPosition(.75);
@@ -263,11 +271,16 @@ public class NewSpindexer {
         return String.format(
                     "Red: %.10f\n"+
                     "Green: %.10f\n"+
-                    "Blue: %.10f\n",
-                    "kickerIsRunning",
+                    "Blue: %.10f\n"+
+                            "BootkickerClock: %.3f\n"
+                            +"BootkickerTimeout: %.3f\n"+
+                    "kickerIsRunning: ",
+
                     RGB[0],
                     RGB[1],
                     RGB[2],
+                    bootkickerClock.milliseconds(),
+                    bootkickerTimeOut.milliseconds(),
                     kickerIsRunning
             );
         }
@@ -285,8 +298,11 @@ public class NewSpindexer {
             while (!isStopRequested()) {
                 newSpindexer.update();
 
-                if (gamepad1.aWasReleased()) {
-                    newSpindexer.requestKickAction();
+                if (gamepad1.dpadDownWasReleased()) {
+                    newSpindexer.resetServo();
+                }
+                if (gamepad1.dpadUpWasReleased()){
+                    newSpindexer.kick();
                 }
 
                 telemetry.addLine(newSpindexer.log());
