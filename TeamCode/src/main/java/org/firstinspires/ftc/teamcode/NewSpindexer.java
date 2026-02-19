@@ -32,11 +32,12 @@ public class NewSpindexer {
     private ElapsedTime bootkickerClock = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
     private ElapsedTime bootkickerTimeOut = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-
-    private boolean bootkickerDown;
     private boolean kickerIsRunning;
 
     private static boolean initalize;
+
+    private boolean canSpin;
+    private boolean isSpinning;
 
     private enum Spindexermode {
         Intake,
@@ -101,28 +102,32 @@ public class NewSpindexer {
             bootkickerClock.reset();
             bootkickerTimeOut.reset();
             kickerIsRunning = false;
+            isSpinning = false;
             initalize = true;
         }
 
 
 
         //update spindexer PID
-        if (kickerIsRunning || bootkickerClock.milliseconds() < 500)  {
+        if (kickerIsRunning || bootkickerClock.milliseconds() < 250)  {
+            canSpin = false;
             x = "breaking";
             return;
         }
+        canSpin = true;
         x = "not breaking";
 
         spindexer.update();
         if (Math.abs(spindexer.getPower()) > .1) {
+            isSpinning = true;
             posState = "not at pos";
             return;
         }
         posState = "at pos";
 
+        if (isSpinning) return;
+
         updateColorSensor();
-
-
 
         //no colors detected do not spin
         //two modes, one for feeding the spindexer, one for sending it to outtake
@@ -170,10 +175,10 @@ public class NewSpindexer {
 
     public String getColor () {
 
-        if (false) {
+        if (RGB[1] >= .0006) {
             return "G";
         }
-        else if (false) {
+        else if (RGB[2] < .009) { // for purple check
             return "P";
         }
         else {
@@ -202,7 +207,7 @@ public class NewSpindexer {
     }
 
     public void resetServo () {
-        if (bootkicker.getPosition() != 0 && bootkickerTimeOut.milliseconds() >= 500) {
+        if (bootkicker.getPosition() != 0 && bootkickerTimeOut.milliseconds() >= 250 && isSpinning) {
             bootkicker.setPosition(0);
             bootkickerClock.reset();
             kickerIsRunning = false;
@@ -210,40 +215,14 @@ public class NewSpindexer {
     }
 
     public void kick () {
-        if (bootkicker.getPosition() != .45 && bootkickerClock.milliseconds() >= 500) {
+        if (bootkicker.getPosition() != .45 && bootkickerClock.milliseconds() >= 250 && !isSpinning) {
             bootkicker.setPosition(.45);
             bootkickerTimeOut.reset();
+            kickerIsRunning = true;
         }
 
 
     }
-//    public void kick () {
-//        bootkicker.setPosition(.75);
-//        bootkickerTimeOut.reset();
-//
-//        resetKicker();
-//    }
-//
-//    public boolean isDoneKicking () {
-//        if (bootkickerTimeOut.milliseconds() >= 200) {
-//            bootkickerDown = false;
-//            resetKicker();
-//            return true;
-//        }
-//        return false;
-//    }
-//    public void resetKicker() {
-//        if (!bootkickerDown && isDoneKicking()) {
-//            bootkicker.setPosition(0);
-//            bootkickerClock.reset();
-//        }
-//        bootkickerDown = true;
-//    }
-//    public boolean kickerIsBlocking() {
-//        return bootkickerDown && bootkickerClock.milliseconds() >= 200;
-//    }
-
-//    public bootkicker
 
 //    public boolean detectGreen () {
 //        if () {
@@ -286,16 +265,15 @@ public class NewSpindexer {
                     "Red: %.10f\n"+
                     "Green: %.10f\n"+
                     "Blue: %.10f\n"+
+                            "Opacity: %.10f \n"+
                             "BootkickerClock: %.3f\n"
                             +"BootkickerTimeout: %.3f\n"+
-                    "kickerIsRunning: \n",
 
                     RGB[0],
                     RGB[1],
                     RGB[2],
                     bootkickerClock.milliseconds(),
-                    bootkickerTimeOut.milliseconds(),
-                    kickerIsRunning
+                    bootkickerTimeOut.milliseconds()
             );
         }
 
