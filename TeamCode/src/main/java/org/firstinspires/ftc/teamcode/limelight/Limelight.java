@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.limelight;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
-
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.roadrunner.Pose2d;
@@ -18,8 +16,13 @@ public class Limelight {
     // https://docs.limelightvision.io/docs/docs-limelight/apis/ftc-programming
 
     private final Limelight3A limelight;
+    private final HardwareMap hardwareMap;
 
     public Limelight(HardwareMap hardwareMap) {
+        if (hardwareMap == null) {
+            throw new IllegalArgumentException("HardwareMap cannot be null!");
+        }
+        this.hardwareMap = hardwareMap;
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.setPollRateHz(100);
         limelight.start();
@@ -65,25 +68,27 @@ public class Limelight {
     }
 
     public Pose2d getRobotPoseFromAprilTag() throws NoAprilTagDetectedException, MT2CalculationFailedException, MT2PositionIsZeroedException {
-        // init what we need
-        MecanumDrive drive = hardwareMap.get(MecanumDrive.class, "drive");
         limelight.start();
         switchPipeline(Pipelines.APRILTAGGER);
 
-        // get data
-        LLResult result = getLatestResult();
-        double robotYaw = drive.lazyImu.get().getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        try {
+            MecanumDrive drive = hardwareMap.get(MecanumDrive.class, "drive");
+            double robotYaw = drive.lazyImu.get().getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
-        // give limelight the yaw so it can do its thing
-        limelight.updateRobotOrientation(Math.toDegrees(robotYaw));
+            // give limelight the yaw so it can do its thing
+            limelight.updateRobotOrientation(Math.toDegrees(robotYaw));
 
-        // process data
-        if (result == null || !result.isValid() || result.getFiducialResults().isEmpty()) {
-            throw new NoAprilTagDetectedException("No AprilTags detected!");
-        } else {
-            Pose2d rrPose = getPose2d(result, robotYaw);
+            // get data after orientation update
+            LLResult result = getLatestResult();
+
+            if (result == null || !result.isValid() || result.getFiducialResults().isEmpty()) {
+                throw new NoAprilTagDetectedException("No AprilTags detected!");
+            }
+
+            return getPose2d(result, robotYaw);
+        } finally {
+            // Always stop to avoid keeping the camera active after a query.
             limelight.stop();
-            return rrPose;
         }
     }
 
