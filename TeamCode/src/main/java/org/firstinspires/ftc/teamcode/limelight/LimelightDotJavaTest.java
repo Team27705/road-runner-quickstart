@@ -31,7 +31,7 @@ public class LimelightDotJavaTest extends LinearOpMode {
                     RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                     RevHubOrientationOnRobot.UsbFacingDirection.UP
             )));
-            double robotYaw = Math.toDegrees(imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
+            double robotYaw = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
             telemetry.addData("Limelight Status", "Initialized");
             telemetry.update();
