@@ -12,13 +12,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
-public class Limelight {
+public class Limelighter {
     // https://docs.limelightvision.io/docs/docs-limelight/apis/ftc-programming
 
     private final Limelight3A limelight;
     private final HardwareMap hardwareMap;
 
-    public Limelight(HardwareMap hardwareMap) {
+    public Limelighter(HardwareMap hardwareMap) {
         if (hardwareMap == null) {
             throw new IllegalArgumentException("HardwareMap cannot be null!");
         }

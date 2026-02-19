@@ -5,19 +5,19 @@ import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.limelight.Limelight;
+import org.firstinspires.ftc.teamcode.limelight.Limelighter;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 public class StartRedBottom extends LinearOpMode {
 
     MecanumDrive mecanumDrive;
-    Limelight limelight;
+    Limelighter limelight;
     @Override
     public void runOpMode() {
         Pose2d beginPose = new Pose2d(60.0, 13 ,180);
 
         mecanumDrive = new MecanumDrive(this.hardwareMap, beginPose);
-        limelight = new Limelight(this.hardwareMap);
+        limelight = new Limelighter(this.hardwareMap);
 
         waitForStart();
 
