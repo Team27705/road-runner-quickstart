@@ -1,6 +1,7 @@
 package com.example.meepmeeptesting;
 
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.Pose2dDual;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
@@ -89,17 +90,20 @@ public class MeepMeepTesting {
                 .actionBuilder(new Pose2d(0,0,Math.toRadians(0)))
                 .turn(Math.toRadians(360));
 
-        myBot.runAction(
-                new SequentialAction(
-                        turnInPlace.build()
-//                        goToObelisk.build(),
-//                        goToShootingZone0.build(),
-//                        goToBallSet1.build(),
-//                        intakeBallSet1.build(),
-//                        goToShootingZone1.build(),
-//                        goToBallSet2.build()
-                    )
-        );
+        Pose2d position = new Pose2d(0,0, Math.toRadians(0));
+
+        // Build trajectory actions with updated positions
+        com.acmerobotics.roadrunner.Action[] moveActions = new com.acmerobotics.roadrunner.Action[8];
+        for (int i = 0; i < 8; i++) {
+            TrajectoryActionBuilder moveBackwards = mecanumDrive
+                    .actionBuilder(position)
+                    .lineToX(position.position.x - 5); // move 5 inches
+            moveActions[i] = moveBackwards.build();
+            // Update position for next iteration
+            position = new Pose2d(position.position.x - 5, position.position.y, position.heading.toDouble());
+        }
+
+        myBot.runAction(new SequentialAction(moveActions));
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_DECODE_OFFICIAL)
                 .setDarkMode(true)

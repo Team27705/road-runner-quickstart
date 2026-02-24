@@ -2,16 +2,18 @@ package org.firstinspires.ftc.teamcode;
 
 import android.annotation.SuppressLint;
 
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.arcrobotics.ftclib.util.InterpLUT;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 
 
@@ -152,26 +154,58 @@ public class NewOuttake {
         }
     }
 
-    @TeleOp(name = "Flywheel distance tests", group = "Test")
+    @TeleOp(name = "Flywheel Distance Tests", group = "Testing")
     public static class DistanceTests extends LinearOpMode {
-        //Only change targetVelocity and hood angle aka servo angle
-        //ideally only want to change 1 number
-        //do it based off of straight line position in inches from limelight, may want to combine with limelight calls
+        DcMotorEx flywheelTop = hardwareMap.get(DcMotorEx.class, "FlywheelTop");
+        DcMotorEx flywheelBot = hardwareMap.get(DcMotorEx.class, "FlywheelBot");
+        Flywheel flywheel = new Flywheel(flywheelTop, flywheelBot);
+        double flywheelTargetVelocity = 1500;
+        Pose2d position = new Pose2d(0,0,0);
 
+        Telemetry telemetry;
+        TelemetryPacket tPacket;
 
-        //**
-        // Ya, if you add kV * targetVelocity to your PID power it helps a lot. You can also add a constant power kS to account for static friction,
-        // but a lot of teams find it unnecessary. Also, don't use D, just P and I. If you want to compensate for battery loss,
-        // I'd recommend multiplying your power by (tuned voltage / actual voltage) same as what he said basically, just a bit better. Here are steps for tuning...
-        //
-        //
+        MecanumDrive driveTrain;
 
         @Override
         public void runOpMode() {
             waitForStart();
 
-            while (!isStopRequested()) {
+            while(opModeInInit()) {
+                telemetry.addLine("Position the robot with the intake against the goal.");
+                telemetry.update();
+            }
 
+            driveTrain = new MecanumDrive(this.hardwareMap, position);
+
+            while(!opModeIsActive()) {
+                if(gamepad1.startWasReleased()) {
+                    TrajectoryActionBuilder goForwards = driveTrain.actionBuilder(position)
+                            .lineToX(position.position.x - 5); // move 5 inches forward, adjust as needed based on testing
+
+                    goForwards.build().run(tPacket);
+                    position = new Pose2d(position.position.x - 5, position.position.y, 0);
+                }
+                if(gamepad1.backWasReleased()) {
+                    TrajectoryActionBuilder goBackwards = driveTrain.actionBuilder(position)
+                            .lineToX(position.position.x + 5); // move 5 inches forward, adjust as needed based on testing
+
+                    goBackwards.build().run(tPacket);
+                    position = new Pose2d(position.position.x + 5, position.position.y, 0);
+                }
+
+                if(gamepad1.dpadUpWasReleased()){
+                    flywheelTargetVelocity += 100;
+                    flywheel.setVelocity(flywheelTargetVelocity);
+                }
+                if(gamepad1.dpadDownWasReleased()) {
+                    flywheelTargetVelocity -= 100;
+                    flywheel.setVelocity(flywheelTargetVelocity);
+                }
+
+                telemetry.addData("Current Dist From Goal", position.position.x);
+                telemetry.addData("Flywheel Target Velocity", flywheelTargetVelocity);
+                telemetry.update();
             }
         }
     }
