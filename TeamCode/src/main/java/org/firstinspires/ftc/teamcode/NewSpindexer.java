@@ -61,9 +61,10 @@ public class NewSpindexer {
     //slot 1: 200 or 220??
     //slot 2:
     //slot 3: 30
+    //https://docs.ftclib.org/ftclib/features/util#timing-functions replace timers with this
 
-
-
+    //https://gm0.org/en/latest/docs/software/concepts/finite-state-machines.html
+    //replace the ifs with a switch case
     public NewSpindexer (HardwareMap hardwareMap, boolean auto) {
         //Spindexer Servo
         crServo = hardwareMap.get(CRServo.class, "Spindexer Servo");
@@ -95,7 +96,7 @@ public class NewSpindexer {
 
 
     public void update() {
-
+        //currently does not work servo doesnt respond
 
         if (!initalize) {
             bootkicker.setPosition(0);
@@ -274,8 +275,8 @@ public class NewSpindexer {
                     RGB[2],
                     bootkickerClock.milliseconds(),
                     bootkickerTimeOut.milliseconds()
-            );
-        }
+        );
+    }
 
     @TeleOp(name = "Color Sensor Test", group = "test")
     public static class ColorSensorTest extends LinearOpMode{

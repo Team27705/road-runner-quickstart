@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.auto;
 
+import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
@@ -78,8 +79,8 @@ public class StartRedTop extends LinearOpMode {
 
         TrajectoryActionBuilder turnInPlace = mecanumDrive.actionBuilder(new Pose2d(0,0,Math.toRadians(0)))
                         .turn(Math.toRadians(360));
-
         Actions.runBlocking(
+
                 new SequentialAction(
                         turnInPlace.build()
 //                        goToObelisk.build()
@@ -91,11 +92,6 @@ public class StartRedTop extends LinearOpMode {
                 )
         );
 
-        Actions.runBlocking(
-                new SequentialAction(
-
-                )
-        );
 
 //        Actions.runBlocking(
 //                new SequentialAction(
