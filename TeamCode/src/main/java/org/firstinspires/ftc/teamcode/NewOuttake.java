@@ -107,14 +107,10 @@ public class NewOuttake {
     @SuppressLint("DefaultLocale")
     public String log() {
         return String.format(
-                "currentTargetVelocity: " +
-                        "Current Velocity: " +
-                        "Current Hood Angle: ",
+                "currentTargetVelocity: %.2f, Current Velocity: %.2f, Current Hood Angle: %.2f",
                 currentTargetVelocity,
                 currentVelocity,
                 hoodServo.getPosition()
-
-
         );
     }
 
