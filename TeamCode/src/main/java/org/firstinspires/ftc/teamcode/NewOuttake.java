@@ -73,10 +73,7 @@ public class NewOuttake {
     //no need to use this in auto, just do 1 pos, only use for teleop
     //check if shooting mode active in teleop loop then run limelight, autoUpdateTargetVel and feed limelight pos
     //get vectorDistance from limelight
-    public void autoUpdateTargetVel(Pose2d vectorDistance) {
-        double distance = Math.sqrt(Math.pow(vectorDistance.component1().x, 2)
-                + Math.pow(vectorDistance.component1().y, 2));
-        //prob check if its 0,0,0
+    public void autoUpdateTargetVel(double distance) {
         currentTargetVelocity = lut.get(distance);
     }
 
