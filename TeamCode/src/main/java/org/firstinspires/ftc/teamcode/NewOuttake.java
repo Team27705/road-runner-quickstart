@@ -3,34 +3,29 @@ package org.firstinspires.ftc.teamcode;
 import android.annotation.SuppressLint;
 
 import com.acmerobotics.roadrunner.Pose2d;
+import com.arcrobotics.ftclib.util.InterpLUT;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.arcrobotics.ftclib.util.InterpLUT;
-
 
 
 public class NewOuttake {
 
-    private DcMotorEx flywheelMotorTop;
-    private DcMotorEx flywheelMotorBottom;
-
+    private static double kP, kI, kD; //PID coeffs, set to private after tuning
+    private final DcMotorEx flywheelMotorTop;
+    private final DcMotorEx flywheelMotorBottom;
     private double currentTargetVelocity = 1500;
     private double currentVelocity;
-
     private boolean readyToShoot;
-
     //coefficents
-    private double kV = 0.000357142857, kS; //kv should be 1 / maxVelocity from encoder, create a short op mod for that
-    private static double kP, kI ,kD; //PID coeffs, set to private after tuning
-    private Servo hoodServo;
-    private InterpLUT lut;
+    private final double kV = 0.000357142857;
+    private double kS; //kv should be 1 / maxVelocity from encoder, create a short op mod for that
+    private final Servo hoodServo;
+    private final InterpLUT lut;
 
 
     //notes: 1 PIDFCoefficents for both motors, use the numbers for one for both
@@ -46,7 +41,7 @@ public class NewOuttake {
     //
 
 
-    public NewOuttake (HardwareMap hardwareMap) {
+    public NewOuttake(HardwareMap hardwareMap) {
         flywheelMotorTop = hardwareMap.get(DcMotorEx.class, "Flywheel Top");
         flywheelMotorBottom = hardwareMap.get(DcMotorEx.class, "Flywheel Bottom");
 
@@ -72,7 +67,7 @@ public class NewOuttake {
 
         double error = currentTargetVelocity - currentVelocity;
         double feedback = error * kP;
-        double feedforward = kV ;
+        double feedforward = kV;
         //prob want to implement some deadzone check for error and break out of updatePID while returning
         flywheelMotorTop.setPower(feedback + feedforward);
         flywheelMotorBottom.setPower(feedback + feedforward);
@@ -82,14 +77,15 @@ public class NewOuttake {
     //no need to use this in auto, just do 1 pos, only use for teleop
     //check if shooting mode active in teleop loop then run limelight, autoUpdateTargetVel and feed limelight pos
     //get vectorDistance from limelight
-    public void autoUpdateTargetVel (Pose2d vectorDistance) {
+    public void autoUpdateTargetVel(Pose2d vectorDistance) {
         double distance = Math.sqrt(Math.pow(vectorDistance.component1().x, 2)
-                                    + Math.pow(vectorDistance.component1().y, 2));
+                + Math.pow(vectorDistance.component1().y, 2));
         //prob check if its 0,0,0
         currentTargetVelocity = lut.get(distance);
     }
+
     //TODO: Implement small InterpLUT for hood
-    public void autoUpdateHood (Pose2d vectorDistance) {
+    public void autoUpdateHood(Pose2d vectorDistance) {
         double distance = Math.sqrt(Math.pow(vectorDistance.component1().x, 2)
                 + Math.pow(vectorDistance.component1().y, 2));
         if (distance <= 10) { //def incorrect fix later, only should have two or angles tho to reduce time to test and variability
@@ -99,21 +95,21 @@ public class NewOuttake {
             setHoodAngle(.5);
         }
     }
+
+    public double getHoodAngle() {
+        return hoodServo.getPosition();
+    }
+
     public void setHoodAngle(double angle) {
         hoodServo.setPosition(angle);
     }
 
-    public double getHoodAngle () {
-        return hoodServo.getPosition();
-    }
-
-
     @SuppressLint("DefaultLocale")
-    public String log () {
+    public String log() {
         return String.format(
-                "currentTargetVelocity: "+
-                "Current Velocity: "+
-                "Current Hood Angle: ",
+                "currentTargetVelocity: " +
+                        "Current Velocity: " +
+                        "Current Hood Angle: ",
                 currentTargetVelocity,
                 currentVelocity,
                 hoodServo.getPosition()
@@ -125,9 +121,10 @@ public class NewOuttake {
     //https://youtu.be/aPNCpZzCTKg?t=786
     @TeleOp(name = "FlyWheel Tuner", group = "test")
     public static class FlyWheelTuner extends OpMode {
-        private DcMotorEx flywheelMotorTop, flywheelMotorBottom;
         public static double targetVelocity, velocity;
-        public static double P,V,S; //do not need kI or kD , find starting numbers
+        public static double P, V, S; //do not need kI or kD , find starting numbers
+        private DcMotorEx flywheelMotorTop, flywheelMotorBottom;
+
         @Override
 
 
@@ -164,6 +161,7 @@ public class NewOuttake {
             flywheelMotorBottom.setDirection(DcMotorSimple.Direction.FORWARD);
         }
     }
+
     @TeleOp(name = "Flywheel distance tests", group = "Test")
     public static class DistanceTests extends LinearOpMode {
         //Only change targetVelocity and hood angle aka servo angle
@@ -179,7 +177,7 @@ public class NewOuttake {
         //
 
         @Override
-        public void runOpMode () {
+        public void runOpMode() {
             waitForStart();
 
             while (!isStopRequested()) {
