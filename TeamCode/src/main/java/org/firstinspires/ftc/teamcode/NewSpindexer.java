@@ -433,8 +433,7 @@ public class NewSpindexer {
                     "Red: %.10f\n"+
                     "Green: %.10f\n"+
                     "Blue: %.10f\n"+
-                            "ARGB: \n"+
-
+                            "ARGB: \n",
                     r,
                     g,
                     b,
