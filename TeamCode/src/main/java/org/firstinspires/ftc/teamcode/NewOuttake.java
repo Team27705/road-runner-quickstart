@@ -12,12 +12,13 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
+
 
 public class NewOuttake {
 
     private static double kP, kI, kD; //PID coeffs, set to private after tuning
-    private final DcMotorEx flywheelMotorTop;
-    private final DcMotorEx flywheelMotorBottom;
+    private final Flywheel flywheel;
     private double currentTargetVelocity = 1500;
     private double currentVelocity;
     private boolean readyToShoot;
@@ -42,19 +43,15 @@ public class NewOuttake {
 
 
     public NewOuttake(HardwareMap hardwareMap) {
-        flywheelMotorTop = hardwareMap.get(DcMotorEx.class, "Flywheel Top");
-        flywheelMotorBottom = hardwareMap.get(DcMotorEx.class, "Flywheel Bottom");
+        DcMotorEx flywheelMotorTop = hardwareMap.get(DcMotorEx.class, "FlywheelTop");
+        DcMotorEx flywheelMotorBottom = hardwareMap.get(DcMotorEx.class, "FlywheelBot");
+        flywheel = new Flywheel(flywheelMotorTop, flywheelMotorBottom);
 
-//        flywheelMotorTop.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        flywheelMotorBottom.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-
-        flywheelMotorTop.setDirection(DcMotorSimple.Direction.FORWARD);
-        flywheelMotorBottom.setDirection(DcMotorSimple.Direction.FORWARD);
+//        flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         hoodServo = hardwareMap.get(Servo.class, "Hood Servo");
         hoodServo.setDirection(Servo.Direction.REVERSE);
-        flywheelMotorTop.getVelocity();
+        flywheel.getVelocity();
 
         lut = new InterpLUT();
 //        lut.add(); //1st distance, second target velocity
@@ -63,14 +60,13 @@ public class NewOuttake {
     }
 
     public void updatePID() {
-        currentVelocity = flywheelMotorTop.getVelocity(); // max vel in ticks per second should be 2800
+        currentVelocity = flywheel.getVelocity(); // max vel in ticks per second should be 2800
 
         double error = currentTargetVelocity - currentVelocity;
         double feedback = error * kP;
         double feedforward = kV;
         //prob want to implement some deadzone check for error and break out of updatePID while returning
-        flywheelMotorTop.setPower(feedback + feedforward);
-        flywheelMotorBottom.setPower(feedback + feedforward);
+        flywheel.setPower(feedback + feedforward);
     }
 
     //https://docs.ftclib.org/ftclib/features/util#what-is-a-look-up-table
@@ -119,7 +115,7 @@ public class NewOuttake {
     public static class FlyWheelTuner extends OpMode {
         public static double targetVelocity, velocity;
         public static double P, V, S; //do not need kI or kD , find starting numbers
-        private DcMotorEx flywheelMotorTop, flywheelMotorBottom;
+        private Flywheel flywheel;
 
         @Override
 
@@ -139,22 +135,20 @@ public class NewOuttake {
         //
 
         public void init() {
-            flywheelMotorTop = hardwareMap.get(DcMotorEx.class, "Flywheel Top");
-            flywheelMotorBottom = hardwareMap.get(DcMotorEx.class, "Flywheel Bottom");
-            flywheelMotorTop.setDirection(DcMotorSimple.Direction.FORWARD);
-            flywheelMotorBottom.setDirection(DcMotorSimple.Direction.FORWARD);
+            DcMotorEx flywheelMotorTop = hardwareMap.get(DcMotorEx.class, "FlywheelTop");
+            DcMotorEx flywheelMotorBottom = hardwareMap.get(DcMotorEx.class, "FlywheelBot");
+            flywheel = new Flywheel(flywheelMotorTop, flywheelMotorBottom);
         }
 
         @Override
         public void loop() {
-            velocity = flywheelMotorTop.getVelocity();
+            velocity = flywheel.getVelocity();
             telemetry.addData("TargetVel", targetVelocity);
             telemetry.addData("CurrentVel", velocity);
             double error = targetVelocity - velocity;
             double feedback = error * P;
             double feedforward = V * targetVelocity + S;
-            flywheelMotorTop.setPower(feedback + feedforward);
-            flywheelMotorBottom.setDirection(DcMotorSimple.Direction.FORWARD);
+            flywheel.setPower(feedback + feedforward);
         }
     }
 
