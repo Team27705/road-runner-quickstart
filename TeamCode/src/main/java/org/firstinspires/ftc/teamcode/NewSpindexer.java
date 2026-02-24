@@ -9,9 +9,9 @@ import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.arcrobotics.ftclib.util.Timing;
 
 import org.firstinspires.ftc.teamcode.subsystems.RTPTorctex;
 
@@ -40,21 +40,28 @@ public class NewSpindexer {
     private boolean canSpin;
     private boolean isSpinning;
 
-    private enum Spindexermode {
+    private enum SpindexerMode {
         Intake,
         Outtake
     }
 
-    private Spindexermode mode;
+    private enum KickerState {
+        SendKickerUp,
+        SendKickerDown,
+    }
+
+    private SpindexerMode spindexerMode;
+    private KickerState kickerState;
 
     private int[] intakePositions = {60,180,330};//index 0 is the degree to send slot 1 to intake, etc //150ish jumps each time might be lower
     private int[] outTakePositions = {270, 150, 30}; //index 0 is the degree to send slot 1 to outtake, etc
-    private int currentSlot;
+    private int currentChamber;
     public String x;
 
     public String posState;
 
     private int teleopMotif;
+    private boolean colorFound;
     //Angle Rotations for intake:
     //Slot 1: 60?
     //slot 2; 120?
@@ -83,10 +90,10 @@ public class NewSpindexer {
 
         if (auto) {
             inventory = new String[] {"P", "G", "P"};
-            mode = Spindexermode.Outtake;
+            spindexerMode = SpindexerMode.Outtake;
         }
         else {
-            mode = Spindexermode.Intake;
+            spindexerMode = SpindexerMode.Intake;
         }
 
 
@@ -138,12 +145,12 @@ public class NewSpindexer {
         //no colors detected do not spin
         //two modes, one for feeding the spindexer, one for sending it to outtake
         //switch them with a boolean that gets updated from controller buttons or the auto sets the variables
-        if (mode == Spindexermode.Intake ) {
+        if (spindexerMode == SpindexerMode.Intake ) {
             if (!getColor().equals("E")) {
                 feedFromIntake();
             }
         }
-        else if (mode == Spindexermode.Outtake) {
+        else if (spindexerMode == SpindexerMode.Outtake) {
 //            if () {
 //
 //            }
@@ -173,15 +180,62 @@ public class NewSpindexer {
         }
 
         if (gamepad1.xWasPressed()) {
-            mode = Spindexermode.Outtake;
+            spindexerMode = SpindexerMode.Outtake;
         }
         if (gamepad1.backWasPressed()) {
-            mode = Spindexermode.Intake;
+            spindexerMode = SpindexerMode.Intake;
         }
-        if () {}
+        if (gamepad1.dpadUpWasReleased()) {
+            //call fsm for servo
+            bootkickerCalled = true;
+        }
 
+        if (bootkickerCalled) {
+            bootkickerFSM();
+        }
+
+
+
+        handleIndexingMode();
         //shooting modes
     }
+
+    public void bootkickerFSM () {
+        switch (kickerState) {
+            case SendKickerUp:
+                canSpin = false;
+                bootkicker.setPosition(0.45);
+
+                break;
+            case WaitTillUp:
+                if () {
+
+                }
+            case SendKickerDown:
+                bootkicker.setPosition(0);
+                if () {
+                    canSpin = true;
+
+                }
+        }
+    }
+
+    public void handleIndexingMode () {
+        if () {}
+        if (!canSpin) return;
+        if (spindexerMode == SpindexerMode.Outtake) {
+            if () {
+
+            }
+        }
+        else if (spindexerMode == SpindexerMode.Intake) {
+            updateColorSensor();
+            if (colorFound) {
+
+            }
+        }
+    }
+
 
     //set this up as a finite state machine
     //first check which index/chamber position has the desired ball
@@ -212,23 +266,10 @@ public class NewSpindexer {
         for (int i = 0; i < 3; i++) {
             if (inventory[i].equals("E")) {
                 spindexer.changeTargetRotation(intakePositions[i]);
-                currentSlot = i;
-                inventory[currentSlot] = getColor();
+                currentChamber = i;
+                inventory[currentChamber] = getColor();
                 return;
             }
-        }
-    }
-
-    public String getColor () {
-
-        if (RGB[1] >= .0006) {
-            return "G";
-        }
-        else if (RGB[2] < .009) { // for purple check
-            return "P";
-        }
-        else {
-            return "E";
         }
     }
 
@@ -270,26 +311,40 @@ public class NewSpindexer {
 
     }
 
-//    public boolean detectGreen () {
-//        if () {
-//            inventory[]
-//            return true;
-//        }
-//        return false;
-//    }
-//
-//    public boolean detectPurple () {
-//        if () {
-//            inventory[]
-//            return true;
-//        }
-//        return false;
-//    }
-
-
     public void updateColorSensor() {
-         NormalizedRGBA colors = colorSensor.getNormalizedColors();
-         RGB = new double[] {colors.red, colors.green, colors.blue};
+//         NormalizedRGBA colors = colorSensor.getNormalizedColors();
+//         RGB = new double[] {colors.red, colors.green, colors.blue};
+        String colorDetected = detectArtifactColor();
+
+        if (colorDetected.equals("E")) {
+            colorFound = false;
+            return;
+        }
+
+        if ()
+
+
+
+
+    }
+
+    public String detectArtifactColor () {
+        int r = colorSensor.red();
+        int g = colorSensor.green();
+        int b = colorSensor.blue();
+        if (g > r && g > b && g > 80 && g < 600) {
+            return "G";
+        }
+        else if (b > r && b > g && b > 80 && b < 600) { // for purple check
+            return "P";
+        }
+        else {
+            return "E";
+        }
+    }
+
+    public int colorSensorARGB () {
+        return colorSensor.argb();
     }
     public double[] getColors() {
         return RGB;
@@ -311,6 +366,7 @@ public class NewSpindexer {
                     "Red: %.10f\n"+
                     "Green: %.10f\n"+
                     "Blue: %.10f\n"+
+                            "ARGB: \n"+
                             "Opacity: %.10f \n"+
                             "BootkickerClock: %.3f\n"
                             +"BootkickerTimeout: %.3f\n"+
@@ -318,6 +374,7 @@ public class NewSpindexer {
                     RGB[0],
                     RGB[1],
                     RGB[2],
+                    colorSensorARGB(),
                     bootkickerClock.milliseconds(),
                     bootkickerTimeOut.milliseconds()
         );
