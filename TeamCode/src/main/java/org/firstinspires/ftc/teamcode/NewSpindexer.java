@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -52,6 +53,8 @@ public class NewSpindexer {
     public String x;
 
     public String posState;
+
+    private int teleopMotif;
     //Angle Rotations for intake:
     //Slot 1: 60?
     //slot 2; 120?
@@ -94,6 +97,8 @@ public class NewSpindexer {
     // Update class is for
     // */
 
+
+    //https://github.com/NgDodo/FTC12209new/blob/master/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Subsystems/Sorter.java#L17
 
     public void update() {
         //currently does not work servo doesnt respond
@@ -146,6 +151,46 @@ public class NewSpindexer {
         //set target?
 //        if (bootkicker.)
         //if color is detected, then set targetPosition of Spindexer
+    }
+
+    public void update(Gamepad gamepad1) { //this is for teleop
+
+        if (gamepad1.aWasReleased()) { // choose motif from button presses, have this add to telem
+            switch (teleopMotif) {
+                case 1:
+                    motif = new String[] {"G","P","P"};
+                    teleopMotif++;
+                    break;
+                case 2:
+                    motif = new String[] {"P","G","P"};
+                    teleopMotif++;
+                    break;
+                case 3:
+                    motif = new String[] {"","",""};
+                    teleopMotif = 1;
+                    break;
+            }
+        }
+
+        if (gamepad1.xWasPressed()) {
+            mode = Spindexermode.Outtake;
+        }
+        if (gamepad1.backWasPressed()) {
+            mode = Spindexermode.Intake;
+        }
+        if () {}
+
+        //shooting modes
+    }
+
+    //set this up as a finite state machine
+    //first check which index/chamber position has the desired ball
+    //then check if
+    public void shootingSequence () {
+        switch () {
+            case 0:
+            case 1:
+        }
     }
 
     public void setMotif (int motifTagNum) { //may not be needed
