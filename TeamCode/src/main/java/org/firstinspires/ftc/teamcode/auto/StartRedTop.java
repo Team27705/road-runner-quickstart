@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
+import org.firstinspires.ftc.teamcode.NewSpindexer;
 
 
 @Autonomous(name = "Start Red Top")
@@ -79,8 +80,10 @@ public class StartRedTop extends LinearOpMode {
 
         TrajectoryActionBuilder turnInPlace = mecanumDrive.actionBuilder(new Pose2d(0,0,Math.toRadians(0)))
                         .turn(Math.toRadians(360));
-        Actions.runBlocking(
 
+
+
+        Actions.runBlocking(
                 new SequentialAction(
                         turnInPlace.build()
 //                        goToObelisk.build()

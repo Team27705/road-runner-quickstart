@@ -15,6 +15,9 @@ import com.arcrobotics.ftclib.util.Timing;
 
 import org.firstinspires.ftc.teamcode.subsystems.RTPTorctex;
 
+import java.sql.Time;
+import java.util.concurrent.TimeUnit;
+
 public class NewSpindexer {
     //include spindexer servo, light, booktkicker, and color sensor
     //note:deprecate Spindexer.java once done
@@ -40,17 +43,28 @@ public class NewSpindexer {
     private boolean canSpin;
     private boolean isSpinning;
 
+    private boolean bootkickerCalled;
+
+
     private enum SpindexerMode {
         Intake,
         Outtake
+    }
+    private enum SpindexerState {
+        Ready,
+        ChangeChamberClockwise,
+        IsSpinning
     }
 
     private enum KickerState {
         SendKickerUp,
         SendKickerDown,
+        Ready,
+        WaitTillDown
     }
 
     private SpindexerMode spindexerMode;
+    private SpindexerState spindexerState;
     private KickerState kickerState;
 
     private int[] intakePositions = {60,180,330};//index 0 is the degree to send slot 1 to intake, etc //150ish jumps each time might be lower
@@ -62,6 +76,14 @@ public class NewSpindexer {
 
     private int teleopMotif;
     private boolean colorFound;
+
+    private long colorStartTime;
+
+    private Timing.Timer bootKickerTimer;
+
+
+    private static final int TIME_TO_DETECT = 50;
+    private static final int BOOTKICKER_DELAY = 200;
     //Angle Rotations for intake:
     //Slot 1: 60?
     //slot 2; 120?
@@ -96,7 +118,7 @@ public class NewSpindexer {
             spindexerMode = SpindexerMode.Intake;
         }
 
-
+        bootKickerTimer = new Timing.Timer(BOOTKICKER_DELAY,TimeUnit.MILLISECONDS);
         initalize = false;
     }
 
@@ -107,60 +129,69 @@ public class NewSpindexer {
 
     //https://github.com/NgDodo/FTC12209new/blob/master/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Subsystems/Sorter.java#L17
 
-    public void update() {
-        //currently does not work servo doesnt respond
-
-        if (!initalize) {
-            bootkicker.setPosition(0);
-            bootkickerClock.reset();
-            bootkickerTimeOut.reset();
-            kickerIsRunning = false;
-            isSpinning = false;
-            initalize = true;
-        }
-
-
-
-        //update spindexer PID
-        if (kickerIsRunning || bootkickerClock.milliseconds() < 250)  {
-            canSpin = false;
-            x = "breaking";
-            return;
-        }
-        canSpin = true;
-        x = "not breaking";
-
-        spindexer.update();
-        if (Math.abs(spindexer.getPower()) > .1) {
-            isSpinning = true;
-            posState = "not at pos";
-            return;
-        }
-        posState = "at pos";
-
-        if (isSpinning) return;
-
-        updateColorSensor();
-
-        //no colors detected do not spin
-        //two modes, one for feeding the spindexer, one for sending it to outtake
-        //switch them with a boolean that gets updated from controller buttons or the auto sets the variables
-        if (spindexerMode == SpindexerMode.Intake ) {
-            if (!getColor().equals("E")) {
-                feedFromIntake();
-            }
-        }
-        else if (spindexerMode == SpindexerMode.Outtake) {
-//            if () {
+//    public void update() {
+//        //currently does not work servo doesnt respond
 //
+//        if (!initalize) {
+//            bootkicker.setPosition(0);
+//            bootkickerClock.reset();
+//            bootkickerTimeOut.reset();
+//            kickerIsRunning = false;
+//            isSpinning = false;
+//            initalize = true;
+//        }
+//
+//
+//
+//        //update spindexer PID
+//        if (kickerIsRunning || bootkickerClock.milliseconds() < 250)  {
+//            canSpin = false;
+//            x = "breaking";
+//            return;
+//        }
+//        canSpin = true;
+//        x = "not breaking";
+//
+//        spindexer.update();
+//        if (Math.abs(spindexer.getPower()) > .1) {
+//            isSpinning = true;
+//            posState = "not at pos";
+//            return;
+//        }
+//        posState = "at pos";
+//
+//        if (isSpinning) return;
+//
+//        updateColorSensor();
+//
+//        //no colors detected do not spin
+//        //two modes, one for feeding the spindexer, one for sending it to outtake
+//        //switch them with a boolean that gets updated from controller buttons or the auto sets the variables
+//        if (spindexerMode == SpindexerMode.Intake ) {
+//            if (!getColor().equals("E")) {
+//                feedFromIntake();
 //            }
-        }
-        //set target?
-//        if (bootkicker.)
-        //if color is detected, then set targetPosition of Spindexer
-    }
+//        }
+//        else if (spindexerMode == SpindexerMode.Outtake) {
+////            if () {
+////
+////            }
+//        }
+//        //set target?
+////        if (bootkicker.)
+//        //if color is detected, then set targetPosition of Spindexer
+//    }
 
     public void update(Gamepad gamepad1) { //this is for teleop
+        if (!initalize) { //ALWAYS BRING BOOTKICKER DOWN AFTER A RUN ALWAYS!!!!!
+            bootkicker.setPosition(0);
+            canSpin = true;
+            spindexerMode = SpindexerMode.Intake;
+            spindexer.setTargetRotation(intakePositions[0]);
+            currentChamber = 0;
+        }
+
+        spindexer.update();
 
         if (gamepad1.aWasReleased()) { // choose motif from button presses, have this add to telem
             switch (teleopMotif) {
@@ -173,8 +204,8 @@ public class NewSpindexer {
                     teleopMotif++;
                     break;
                 case 3:
-                    motif = new String[] {"","",""};
-                    teleopMotif = 1;
+                    motif = new String[] {"P","G","G"};
+                    teleopMotif = 4;
                     break;
             }
         }
@@ -187,14 +218,12 @@ public class NewSpindexer {
         }
         if (gamepad1.dpadUpWasReleased()) {
             //call fsm for servo
-            bootkickerCalled = true;
+            kickerState = KickerState.SendKickerUp;
         }
 
-        if (bootkickerCalled) {
+        if (kickerState != KickerState.Ready) {
             bootkickerFSM();
         }
-
-
 
         handleIndexingMode();
         //shooting modes
@@ -202,37 +231,59 @@ public class NewSpindexer {
 
     public void bootkickerFSM () {
         switch (kickerState) {
+            case Ready:
+                break;
             case SendKickerUp:
                 canSpin = false;
                 bootkicker.setPosition(0.45);
-
+                kickerState = KickerState.SendKickerDown;
+                bootKickerTimer.start();
                 break;
-            case WaitTillUp:
-                if () {
-
-                }
             case SendKickerDown:
-                bootkicker.setPosition(0);
-                if () {
-                    canSpin = true;
-
+                if (bootKickerTimer.done()) {
+                    bootkicker.setPosition(0);
+                    kickerState = KickerState.SendKickerDown;
+                    bootKickerTimer.start();
                 }
+                break;
+            case WaitTillDown:
+                if (bootKickerTimer.done()) {
+                    canSpin = true;
+                    kickerState = KickerState.Ready;
+                }
+                break;
         }
     }
+    public void spindexerFSM () {
+        switch (spindexerState) {
+            case Ready:
+                break;
+            case ChangeChamberClockwise:
+                if (canSpin) {
+                    currentChamber++;
+                    currentChamber = currentChamber % 3;//when changing from shooting manually set currentChamber to
+                    spindexer.setTargetRotation(currentChamber);
+                }
+                break;
+            case IsSpinning:
+                if (spindexer.isAtTarget()) {
+                    spindexerState = SpindexerState.Ready;
+                }
+                break;
 
-    public void handleIndexingMode () {
-        if () {}
-        if (!canSpin) return;
-        if (spindexerMode == SpindexerMode.Outtake) {
-            if () {
 
-            }
         }
-        else if (spindexerMode == SpindexerMode.Intake) {
+    }
+    public void handleIndexingMode () {
+        if (!canSpin || spindexerState != SpindexerState.Ready) return;
+        if (spindexerMode == SpindexerMode.Outtake) {
+//            if () {
+//
+//            }
+        }
+        else if (spindexerMode == SpindexerMode.Intake && !isFull()) {
             updateColorSensor();
-            if (colorFound) {
 
-            }
         }
     }
 
@@ -259,19 +310,19 @@ public class NewSpindexer {
         }
     }
 
-    public void feedFromIntake () {
-//        if (isFull()) { //checks if full // may be unncessary
-//            return;
+//    public void feedFromIntake () {
+////        if (isFull()) { //checks if full // may be unncessary
+////            return;
+////        }
+//        for (int i = 0; i < 3; i++) {
+//            if (inventory[i].equals("E")) {
+//                spindexer.changeTargetRotation(intakePositions[i]);
+//                currentChamber = i;
+//                inventory[currentChamber] = getColor();
+//                return;
+//            }
 //        }
-        for (int i = 0; i < 3; i++) {
-            if (inventory[i].equals("E")) {
-                spindexer.changeTargetRotation(intakePositions[i]);
-                currentChamber = i;
-                inventory[currentChamber] = getColor();
-                return;
-            }
-        }
-    }
+//    }
 
     public void goToOuttake () {
         if (motif == null) motif = new String[] {"P", "G", "P"};
@@ -301,15 +352,15 @@ public class NewSpindexer {
         }
     }
 
-    public void kick () {
-        if (bootkicker.getPosition() != .45 && bootkickerClock.milliseconds() >= 250 && !isSpinning) {
-            bootkicker.setPosition(.45);
-            bootkickerTimeOut.reset();
-            kickerIsRunning = true;
-        }
-
-
-    }
+//    public void kick () {
+//        if (bootkicker.getPosition() != .45 && bootkickerClock.milliseconds() >= 250 && !isSpinning) {
+//            bootkicker.setPosition(.45);
+//            bootkickerTimeOut.reset();
+//            kickerIsRunning = true;
+//        }
+//
+//
+//    }
 
     public void updateColorSensor() {
 //         NormalizedRGBA colors = colorSensor.getNormalizedColors();
@@ -321,7 +372,20 @@ public class NewSpindexer {
             return;
         }
 
+        if (!colorFound) {
+            colorFound = true;
+            colorStartTime = System.currentTimeMillis();
+        }
 
+        if (System.currentTimeMillis() - colorStartTime >= TIME_TO_DETECT) {
+            if (inventory[currentChamber].equals("E")) {
+                inventory[currentChamber] = colorDetected;
+//                spindexerState = SpindexerState.
+            }
+            colorStartTime = 0;
+            colorFound = true;
+            //deactivate colorSensor
+        }
     }
 
     public String detectArtifactColor () {
@@ -353,6 +417,9 @@ public class NewSpindexer {
             }
         }
         return true;
+    }
+
+    public void rotateSpindexerClockwise() {
     }
 
 
@@ -387,14 +454,14 @@ public class NewSpindexer {
 
 
             while (!isStopRequested()) {
-                newSpindexer.update();
+                newSpindexer.update(gamepad1);
 
-                if (gamepad1.dpadDownWasReleased()) {
-                    newSpindexer.resetServo();
-                }
-                if (gamepad1.dpadUpWasReleased()){
-                    newSpindexer.kick();
-                }
+//                if (gamepad1.dpadDownWasReleased()) {
+//                    newSpindexer.resetServo();
+//                }
+//                if (gamepad1.dpadUpWasReleased()){
+//                    newSpindexer.kick();
+//                }
 
                 telemetry.addLine(newSpindexer.log());
                 telemetry.addData("x: ",newSpindexer.x);
