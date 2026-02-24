@@ -64,7 +64,8 @@ public class NewOuttake {
 
         double error = currentTargetVelocity - currentVelocity;
         double feedback = error * kP;
-        double feedforward = kV;
+        double feedforward = kV ;
+        double pidOutput = Math.max(-1.0, Math.min(1,feedback + feedforward));
         //prob want to implement some deadzone check for error and break out of updatePID while returning
         flywheel.setPower(feedback + feedforward);
     }
@@ -139,6 +140,8 @@ public class NewOuttake {
 
         @Override
         public void loop() {
+            velocity = flywheelMotorTop.getVelocity();
+            telemetry.addData("TargetVel", targetVelocity); //max cap should be 2800 ticks per second
             velocity = flywheel.getVelocity();
             telemetry.addData("TargetVel", targetVelocity);
             telemetry.addData("CurrentVel", velocity);
