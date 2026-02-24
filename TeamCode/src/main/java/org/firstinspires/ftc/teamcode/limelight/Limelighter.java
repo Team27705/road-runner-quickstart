@@ -150,6 +150,11 @@ public class Limelighter {
         );
     }
 
+    public double getRobotDistanceFromAprilTag(double yaw) throws NoAprilTagException, MT2FailedException, MT2ZeroedPosException {
+        Pose2d vectorToTag = getRobotVectorFromAprilTag(yaw);
+        return Math.hypot(vectorToTag.position.x, vectorToTag.position.y);
+    }
+
     public enum Pipelines {
         APRILTAGGER(0), PURPLER(1), GREENER(2);
 
