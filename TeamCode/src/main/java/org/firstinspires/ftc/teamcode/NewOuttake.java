@@ -142,8 +142,6 @@ public class NewOuttake {
 
         @Override
         public void loop() {
-            velocity = flywheelMotorTop.getVelocity();
-            telemetry.addData("TargetVel", targetVelocity); //max cap should be 2800 ticks per second
             velocity = flywheel.getVelocity();
             telemetry.addData("TargetVel", targetVelocity);
             telemetry.addData("CurrentVel", velocity);

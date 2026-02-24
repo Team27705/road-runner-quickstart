@@ -84,6 +84,7 @@ public class NewSpindexer {
 
     private static final int TIME_TO_DETECT = 50;
     private static final int BOOTKICKER_DELAY = 200;
+    private int r,g,b;
     //Angle Rotations for intake:
     //Slot 1: 60?
     //slot 2; 120?
@@ -188,6 +189,9 @@ public class NewSpindexer {
             canSpin = true;
             spindexerMode = SpindexerMode.Intake;
             spindexer.setTargetRotation(intakePositions[0]);
+            kickerState = KickerState.Ready;
+            spindexerState =SpindexerState.Ready;
+
             currentChamber = 0;
         }
 
@@ -221,7 +225,7 @@ public class NewSpindexer {
             kickerState = KickerState.SendKickerUp;
         }
 
-        if (kickerState != KickerState.Ready) {
+        if (!kickerState.equals(KickerState.Ready)) {
             bootkickerFSM();
         }
 
@@ -275,13 +279,13 @@ public class NewSpindexer {
         }
     }
     public void handleIndexingMode () {
-        if (!canSpin || spindexerState != SpindexerState.Ready) return;
-        if (spindexerMode == SpindexerMode.Outtake) {
+        if (!canSpin || !spindexerState.equals(SpindexerState.Ready)) return;
+        if (spindexerMode.equals(SpindexerMode.Outtake)) {
 //            if () {
 //
 //            }
         }
-        else if (spindexerMode == SpindexerMode.Intake && !isFull()) {
+        else if (spindexerMode.equals(SpindexerMode.Intake) && !isFull()) {
             updateColorSensor();
 
         }
@@ -389,9 +393,9 @@ public class NewSpindexer {
     }
 
     public String detectArtifactColor () {
-        int r = colorSensor.red();
-        int g = colorSensor.green();
-        int b = colorSensor.blue();
+        r = colorSensor.red();
+        g = colorSensor.green();
+        b = colorSensor.blue();
         if (g > r && g > b && g > 80 && g < 600) {
             return "G";
         }
@@ -430,16 +434,12 @@ public class NewSpindexer {
                     "Green: %.10f\n"+
                     "Blue: %.10f\n"+
                             "ARGB: \n"+
-                            "Opacity: %.10f \n"+
-                            "BootkickerClock: %.3f\n"
-                            +"BootkickerTimeout: %.3f\n"+
 
-                    RGB[0],
-                    RGB[1],
-                    RGB[2],
+                    r,
+                    g,
+                    b,
                     colorSensorARGB(),
-                    bootkickerClock.milliseconds(),
-                    bootkickerTimeOut.milliseconds()
+                    detectArtifactColor()
         );
     }
 
