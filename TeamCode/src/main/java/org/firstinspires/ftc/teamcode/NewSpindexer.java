@@ -240,12 +240,12 @@ public class NewSpindexer {
     //set this up as a finite state machine
     //first check which index/chamber position has the desired ball
     //then check if
-    public void shootingSequence () {
-        switch () {
-            case 0:
-            case 1:
-        }
-    }
+//    public void shootingSequence () {
+//        switch () {
+//            case 0:
+//            case 1:
+//        }
+//    }
 
     public void setMotif (int motifTagNum) { //may not be needed
         if (motifTagNum == 21) {
@@ -320,10 +320,6 @@ public class NewSpindexer {
             colorFound = false;
             return;
         }
-
-        if ()
-
-
 
 
     }
