@@ -33,6 +33,6 @@ public class Flywheel {
 
     public double getVelocity() {
         // Returns the average velocity of both motors
-        return (botMotor.getVelocity() + topMotor.getVelocity()) / 2.0;
+        return topMotor.getVelocity();
     }
 }
