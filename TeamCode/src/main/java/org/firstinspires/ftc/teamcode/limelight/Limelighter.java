@@ -9,12 +9,17 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import org.firstinspires.ftc.teamcode.MecanumDrive;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+
+import java.util.HashMap;
 
 public class Limelighter {
     // https://docs.limelightvision.io/docs/docs-limelight/apis/ftc-programming
 
+    public final HashMap<Integer, Pose3D> tagPositions = new HashMap<Integer, Pose3D>();
     private final Limelight3A limelight;
     private final HardwareMap hardwareMap;
 
@@ -27,6 +32,15 @@ public class Limelighter {
         limelight.setPollRateHz(100);
         limelight.start();
         switchPipeline(Pipelines.APRILTAGGER);
+        // init known tag positions, from https://www.chiefdelphi.com/t/decode-field-map/506135/2
+        tagPositions.put(20, new Pose3D(
+                new Position(DistanceUnit.METER, -1.482, -1.413, 0.749, 0),
+                new YawPitchRollAngles(AngleUnit.DEGREES, 54, 0, 0, 0)
+        ));
+        tagPositions.put(24, new Pose3D(
+                new Position(DistanceUnit.METER, -1.482, 1.413, 0.749, 0),
+                new YawPitchRollAngles(AngleUnit.DEGREES, -54, 0, 0, 0)
+        ));
     }
 
     @NonNull
@@ -105,6 +119,35 @@ public class Limelighter {
             // Always stop to avoid keeping the camera active after a query.
             limelight.stop();
         }
+    }
+
+    public Pose2d getRobotVectorFromAprilTag(double yaw) throws NoAprilTagException, MT2FailedException, MT2ZeroedPosException {
+        // first get a fiducial result
+        LLResult result = getLatestResult();
+        if (result == null || !result.isValid() || result.getFiducialResults().isEmpty()) {
+            throw new NoAprilTagException("No AprilTags detected!");
+        }
+        int tagID = result.getFiducialResults().get(0).getFiducialId();
+
+        // get bot pose and tag pose
+        Pose2d calculatedPose = getPose2d(result, yaw);
+        Pose3D tagPose3D = tagPositions.get(tagID);
+        if (tagPose3D == null) {
+            throw new NoAprilTagException("Detected AprilTag ID " + tagID + " does not have a known position!");
+        }
+        Pose2d tagPose2D = new Pose2d(
+                new Vector2d(tagPose3D.getPosition().x, tagPose3D.getPosition().y),
+                tagPose3D.getOrientation().getYaw(AngleUnit.RADIANS)
+        );
+
+        // calculate delta
+        return new Pose2d(
+                new Vector2d(
+                        calculatedPose.position.x - tagPose2D.position.x,
+                        calculatedPose.position.y - tagPose2D.position.y
+                ),
+                calculatedPose.heading.minus(tagPose2D.heading)
+        );
     }
 
     public enum Pipelines {
