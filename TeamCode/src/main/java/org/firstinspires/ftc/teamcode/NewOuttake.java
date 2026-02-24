@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.ftc.Actions;
 import com.arcrobotics.ftclib.util.InterpLUT;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -181,14 +182,14 @@ public class NewOuttake {
                     TrajectoryActionBuilder goForwards = driveTrain.actionBuilder(position)
                             .lineToX(position.position.x - 5); // move 5 inches forward, adjust as needed based on testing
 
-                    goForwards.build().run(tPacket);
+                    Actions.runBlocking(goForwards.build());
                     position = new Pose2d(position.position.x - 5, position.position.y, 0);
                 }
                 if(gamepad1.backWasReleased()) {
                     TrajectoryActionBuilder goBackwards = driveTrain.actionBuilder(position)
                             .lineToX(position.position.x + 5); // move 5 inches forward, adjust as needed based on testing
 
-                    goBackwards.build().run(tPacket);
+                    Actions.runBlocking(goBackwards.build());
                     position = new Pose2d(position.position.x + 5, position.position.y, 0);
                 }
 
