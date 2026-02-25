@@ -23,6 +23,8 @@ public class NewSpindexer {
     public String x;
     public String posState;
 
+    public String detectTimerPass;
+
 
     // Hardware
     private final RTPTorctex sorter;
@@ -53,6 +55,8 @@ public class NewSpindexer {
     private long colorStartTime;
     private final ElapsedTime bootKickerTimer;
     private final ElapsedTime sorterTimer;
+
+    public String flagActive;
 
 //    private Timing.Timer bootKickerTimer;
     private int r, g, b, opacity;
@@ -224,6 +228,13 @@ public class NewSpindexer {
                 break;
         }
     }
+
+//    public voidAutoShootingSequence () {
+//
+//        if (!isEmpty()) {
+//
+//        }
+//    }
     //Angle Rotations for intake:
     //Slot 1: 60?
     //slot 2; 120?
@@ -245,18 +256,16 @@ public class NewSpindexer {
                 }
                 break;
             case SpinToEmptyChamber: //only use for intake
-                if (canSpin()) {
-                    for (int i = 0; i < 3; i++) {
-                        if (inventory[i].equals("E")) {
-                            currentChamber = i;
-                            sorter.setTargetRotation(intakePositions[i]);
-                            sorterState = SorterState.Spinning;
-                            break;
-                        }
+                for (int i = 0; i < 3; i++) {
+                    if (inventory[i].equals("E")) {
+                        currentChamber = i;
+                        sorter.setTargetRotation(intakePositions[i]);
+                        sorterState = SorterState.Spinning;
+                        break;
                     }
                 }
                 break;
-            case SpinToTargetMotif:
+            case SpinToOuttakeTargetingMotif:
                 if (canSpin()) {
 
                 }
@@ -277,7 +286,8 @@ public class NewSpindexer {
 //            if () {
 //
 //            }
-        } else if (spindexerMode.equals(SpindexerMode.Intake) && !isFull()) {
+        }
+        else if (spindexerMode.equals(SpindexerMode.Intake) && !isFull()) {
             colorSensor.update();
         }
     }
@@ -304,13 +314,18 @@ public class NewSpindexer {
             }
 
             if (System.currentTimeMillis() - colorStartTime >= TIME_TO_DETECT) {
+
                 if (inventory[currentChamber].equals("E")) {
                     inventory[currentChamber] = colorDetected;
                     sorterState = SorterState.SpinToEmptyChamber;
+                    flagActive = "flaged";
                 }
                 colorStartTime = 0;
                 colorFound = true;
                 //deactivate colorSensor
+            }
+            else {
+                flagActive = "Not flaged";
             }
         }
 
@@ -374,7 +389,9 @@ public class NewSpindexer {
         }
         return false;
     }
-
+    public String printInventory () {
+        return "Chamber 1: " + inventory[0] + "\n Chamber 2: " +  inventory[1] + "\n Chamber 3: " + inventory[2];
+    }
 
     //set this up as a finite state machine
     //first check which index/chamber position has the desired ball
@@ -407,7 +424,7 @@ public class NewSpindexer {
         Ready,
         SpinToEmptyChamber,
         Spinning,
-        SpinToTargetMotif
+        SpinToOuttakeTargetingMotif
     }
 
     private enum KickerState {
@@ -441,6 +458,8 @@ public class NewSpindexer {
                 telemetry.addData("x: ", newSpindexer.x);
                 telemetry.addData("Pos State: ", newSpindexer.posState);
                 telemetry.addData("Spindexer Power", newSpindexer.sorter.getPower());
+                telemetry.addLine(newSpindexer.flagActive);
+                telemetry.addLine(newSpindexer.printInventory());
                 telemetry.update();
             }
         }
