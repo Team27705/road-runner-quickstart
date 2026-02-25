@@ -85,7 +85,7 @@ public class NewSpindexer {
 
 
     private static final int TIME_TO_DETECT = 50;
-    private static final int BOOTKICKER_DELAY = 2000;
+    private static final int BOOTKICKER_DELAY = 400;
     private int r,g,b, opacity;
     //Angle Rotations for intake:
     //Slot 1: 60?
@@ -192,9 +192,10 @@ public class NewSpindexer {
             spindexerMode = SpindexerMode.Intake;
             spindexer.setTargetRotation(intakePositions[0]);
             kickerState = KickerState.Ready;
-            spindexerState =SpindexerState.Ready;
+            spindexerState = SpindexerState.Ready;
 
             currentChamber = 0;
+            initalize = true;
         }
 
         spindexer.update();
@@ -216,23 +217,21 @@ public class NewSpindexer {
             }
         }
 
-        if (gamepad1.xWasPressed()) {
+        if (gamepad1.xWasReleased()) {
             spindexerMode = SpindexerMode.Outtake;
         }
-        if (gamepad1.backWasPressed()) {
+
+        if (gamepad1.backWasReleased()) {
             spindexerMode = SpindexerMode.Intake;
         }
-        if (gamepad1.dpadUpWasReleased()) {
+
+        if (gamepad1.dpadUpWasReleased() && kickerState.equals(KickerState.Ready) && spindexerState.equals(SpindexerState.Ready)) {
             //call fsm for servo
             kickerState = KickerState.SendKickerUp;
         }
+
         bootkickerFSM();
-
-        if (!kickerState.equals(KickerState.Ready)) {
-
-        }
-
-        handleIndexingMode();
+//        handleIndexingMode();
         //shooting modes
     }
 
@@ -249,7 +248,7 @@ public class NewSpindexer {
             case SendKickerDown:
                 if (bootKickerTimer.milliseconds() >= BOOTKICKER_DELAY) {
                     bootkicker.setPosition(0);
-                    kickerState = KickerState.SendKickerDown;
+                    kickerState = KickerState.WaitTillDown;
                     bootKickerTimer.reset();
                 }
                 break;
