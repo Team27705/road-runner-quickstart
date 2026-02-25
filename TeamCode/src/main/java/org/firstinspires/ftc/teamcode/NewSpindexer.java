@@ -16,7 +16,7 @@ public class NewSpindexer {
     //include spindexer servo, light, booktkicker, and color sensor
     //note:deprecate Spindexer.java once done
 
-    private static final int TIME_TO_DETECT = 50;
+    private static final int TIME_TO_DETECT = 25;
     private static final int BOOTKICKER_DELAY = 400;
     public static String[] motif;
     private static boolean isInitalized;
@@ -48,14 +48,17 @@ public class NewSpindexer {
     private SorterState sorterState;
     private KickerState kickerState;
     private final int[] outTakePositions = {60, 180, 330};//index 0 is the degree to send slot 1 to intake, etc //150ish jumps each time might be lower
-    private final int[] intakePositions = {270, 150, 30}; //index 0 is the degree to send slot 1 to outtake, etc
+    private final int[] intakePositions = {10, 130, 250}; //index 0 is the degree to send slot 1 to outtake, etc
     private int currentChamber;
     private int teleopMotif;
     private boolean colorFound;
-    private long colorStartTime;
+    private double colorStartTime;
     private final ElapsedTime bootKickerTimer;
     private final ElapsedTime sorterTimer;
+    private final ElapsedTime colorSensorTimer;
 
+    private int currentTargetMotifNum = 0;
+    private int shootingStep = 0;
     public String flagActive;
 
 //    private Timing.Timer bootKickerTimer;
@@ -84,6 +87,7 @@ public class NewSpindexer {
 
         bootKickerTimer = new ElapsedTime();
         sorterTimer = new ElapsedTime();
+        colorSensorTimer = new ElapsedTime();
         isInitalized = false;
     }
     //        //if color is detected, then set targetPosition of Spindexer
@@ -146,6 +150,17 @@ public class NewSpindexer {
     ////            }
 //        }
 //        //set target?
+
+    public void update() {
+        if (!isInitalized) {
+            bootkicker.setPosition(0);
+            canSpin = true;
+
+            spindexerMode = SpindexerMode.Outtake;
+        }
+
+
+    }
 
     public void update(Gamepad gamepad1) { //this is for teleop
         if (!isInitalized) { //ALWAYS BRING BOOTKICKER DOWN AFTER A RUN ALWAYS!!!!!
@@ -229,12 +244,25 @@ public class NewSpindexer {
         }
     }
 
-//    public voidAutoShootingSequence () {
-//
-//        if (!isEmpty()) {
-//
-//        }
-//    }
+    public void AutoShootingSequence () {
+
+        switch (shootingStep) {
+            case (0):
+                break;
+            case (1): //if shootStep = 1 initate
+
+                break;
+            case (2):
+                if () { //create a timer and then check if greater than certain time
+
+                }
+            case (3):
+
+        }
+
+    }
+
+
     //Angle Rotations for intake:
     //Slot 1: 60?
     //slot 2; 120?
@@ -266,9 +294,15 @@ public class NewSpindexer {
                 }
                 break;
             case SpinToOuttakeTargetingMotif:
-                if (canSpin()) {
-
+                for (int chamber = 0; chamber < 3; chamber++) {
+                    if (inventory[chamber].equals(motif[currentTargetMotifNum])) {
+                        sorter.setTargetRotation(outTakePositions[chamber]);
+                        inventory[chamber] = "E";
+                        sorterState = SorterState.Spinning;
+                        break;
+                    }
                 }
+                break;
 
         }
     }
@@ -282,7 +316,9 @@ public class NewSpindexer {
     public void handleIndexingMode() {
         if (!canSpin()) return;
         if (spindexerMode.equals(SpindexerMode.Outtake)) {
+            if (readyToShoot()) {
 
+            }
 //            if () {
 //
 //            }
@@ -290,6 +326,10 @@ public class NewSpindexer {
         else if (spindexerMode.equals(SpindexerMode.Intake) && !isFull()) {
             colorSensor.update();
         }
+    }
+
+    private boolean readyToShoot() {
+
     }
 
     public class ColorSensor {
@@ -310,11 +350,11 @@ public class NewSpindexer {
 
             if (!colorFound) {
                 colorFound = true;
-                colorStartTime = System.currentTimeMillis();
+                colorSensorTimer.reset();
+                colorStartTime = colorSensorTimer.milliseconds();
             }
 
-            if (System.currentTimeMillis() - colorStartTime >= TIME_TO_DETECT) {
-
+            if (colorSensorTimer.milliseconds() - colorStartTime >= TIME_TO_DETECT) {
                 if (inventory[currentChamber].equals("E")) {
                     inventory[currentChamber] = colorDetected;
                     sorterState = SorterState.SpinToEmptyChamber;
@@ -353,7 +393,8 @@ public class NewSpindexer {
                     + "\nGreen: " + g
                     + "\nBlue: " + b
                     + "\nARGB: " + getARGB()
-                    + "\nArtifact Color: " + detectArtifactColor();
+                    + "\nArtifact Color: " + detectArtifactColor() +
+                    "Is able to spin: " + canSpin;
         }
     }
 
@@ -393,19 +434,18 @@ public class NewSpindexer {
         return "Chamber 1: " + inventory[0] + "\n Chamber 2: " +  inventory[1] + "\n Chamber 3: " + inventory[2];
     }
 
-    //set this up as a finite state machine
-    //first check which index/chamber position has the desired ball
-    //then check if
-//    public void shootingSequence () {
-//        switch () {
-//            case 0:
-//            case 1:
-//        }
-//    }
-
     public boolean isFull() {
         for (int i = 0; i < 3; i++) {
             if (inventory[i].equals("E")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isEmpty() {
+        for (int i = 0; i < 3; i++) {
+            if (inventory[i].equals("P") || inventory[i].equals("G")) {
                 return false;
             }
         }
