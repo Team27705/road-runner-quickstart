@@ -81,7 +81,7 @@ public class NewSpindexer {
 
 //    private Timing.Timer bootKickerTimer;
 
-    private ElapsedTime bootKickerTimer = new ElapsedTime();
+    private ElapsedTime bootKickerTimer;
 
 
     private static final int TIME_TO_DETECT = 50;
@@ -121,7 +121,7 @@ public class NewSpindexer {
             spindexerMode = SpindexerMode.Intake;
         }
 
-        bootKickerTimer = new Timing.Timer(BOOTKICKER_DELAY,TimeUnit.MILLISECONDS);
+        bootKickerTimer = new ElapsedTime();
         initalize = false;
     }
 
@@ -244,17 +244,17 @@ public class NewSpindexer {
                 canSpin = false;
                 bootkicker.setPosition(0.45);
                 kickerState = KickerState.SendKickerDown;
-                bootKickerTimer.start();
+                bootKickerTimer.reset();
                 break;
             case SendKickerDown:
-                if (bootKickerTimer.done()) {
+                if (bootKickerTimer.milliseconds() >= BOOTKICKER_DELAY) {
                     bootkicker.setPosition(0);
                     kickerState = KickerState.SendKickerDown;
-                    bootKickerTimer.start();
+                    bootKickerTimer.reset();
                 }
                 break;
             case WaitTillDown:
-                if (bootKickerTimer.done()) {
+                if (bootKickerTimer.milliseconds() >= BOOTKICKER_DELAY) {
                     canSpin = true;
                     kickerState = KickerState.Ready;
                 }
