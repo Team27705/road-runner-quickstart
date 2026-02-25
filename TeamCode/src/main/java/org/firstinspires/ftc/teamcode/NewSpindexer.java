@@ -79,11 +79,13 @@ public class NewSpindexer {
 
     private long colorStartTime;
 
-    private Timing.Timer bootKickerTimer;
+//    private Timing.Timer bootKickerTimer;
+
+    private ElapsedTime bootKickerTimer = new ElapsedTime();
 
 
     private static final int TIME_TO_DETECT = 50;
-    private static final int BOOTKICKER_DELAY = 200;
+    private static final int BOOTKICKER_DELAY = 2000;
     private int r,g,b, opacity;
     //Angle Rotations for intake:
     //Slot 1: 60?
@@ -224,9 +226,10 @@ public class NewSpindexer {
             //call fsm for servo
             kickerState = KickerState.SendKickerUp;
         }
+        bootkickerFSM();
 
         if (!kickerState.equals(KickerState.Ready)) {
-            bootkickerFSM();
+
         }
 
         handleIndexingMode();
