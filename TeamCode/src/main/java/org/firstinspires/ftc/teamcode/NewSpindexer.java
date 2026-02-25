@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.annotation.SuppressLint;
-
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -31,7 +29,8 @@ public class NewSpindexer {
     private final CRServo crServo;
     private final AnalogInput analogEncoder;
     private final Servo bootkicker;
-    private final RevColorSensorV3 colorSensor;
+    private final RevColorSensorV3 revColorSensor;
+    private final ColorSensor colorSensor;
     // Bot Variables
     private String[] inventory = {"E", "E", "E"}; //E = empty, P = purple, G = green
     private final double[] RGB = {0, 0, 0};
@@ -66,13 +65,11 @@ public class NewSpindexer {
         crServo = hardwareMap.get(CRServo.class, "Spindexer Servo");
         analogEncoder = hardwareMap.get(AnalogInput.class, "Spindexer Encoder");
         spindexer = new RTPTorctex(crServo, analogEncoder);
-
+        revColorSensor = hardwareMap.get(RevColorSensorV3.class, "colorSensor");
+        colorSensor = new ColorSensor(revColorSensor);
 
         bootkicker = hardwareMap.get(Servo.class, "bootkicker");
-
         bootkicker.setDirection(Servo.Direction.REVERSE);
-
-        colorSensor = hardwareMap.get(RevColorSensorV3.class, "colorSensor");
 
         if (auto) {
             inventory = new String[]{"P", "G", "P"};
@@ -267,11 +264,16 @@ public class NewSpindexer {
 //
 //            }
         } else if (spindexerMode.equals(SpindexerMode.Intake) && !isFull()) {
-            updateColorSensor();
+            colorSensor.update();
         }
     }
 
     public class ColorSensor {
+        private final RevColorSensorV3 revColorSensor;
+        public ColorSensor(RevColorSensorV3 revColorSensor) {
+            this.revColorSensor = revColorSensor;
+        }
+
         public void update() {
 //         NormalizedRGBA colors = colorSensor.getNormalizedColors();
 //         RGB = new double[] {colors.red, colors.green, colors.blue};
@@ -299,10 +301,10 @@ public class NewSpindexer {
         }
 
         public String detectArtifactColor() {
-            r = colorSensor.red(); //test if you dont need remove g> r and b > r and see if it still works
-            g = colorSensor.green();
-            b = colorSensor.blue();
-            opacity = colorSensorARGB();
+            r = revColorSensor.red(); //test if you dont need remove g> r and b > r and see if it still works
+            g = revColorSensor.green();
+            b = revColorSensor.blue();
+            opacity = getARGB();
             if (opacity >= 300000000) {
                 return "E";
             } else if (g > r && g > b && g > 50 && g < 600) {
@@ -312,8 +314,8 @@ public class NewSpindexer {
             } else return "E";
         }
 
-        public int rawARGB() {
-            return colorSensor.argb();
+        public int getARGB() {
+            return revColorSensor.argb();
         }
 
         public String log() {
@@ -321,7 +323,7 @@ public class NewSpindexer {
             return "Red: " + r
                     + "\nGreen: " + g
                     + "\nBlue: " + b
-                    + "\nARGB: " + rawARGB()
+                    + "\nARGB: " + getARGB()
                     + "\nArtifact Color: " + detectArtifactColor();
         }
     }
@@ -429,7 +431,7 @@ public class NewSpindexer {
 //                    newSpindexer.kick();
 //                }
 
-                telemetry.addLine(newSpindexer.log());
+                telemetry.addLine(newSpindexer.colorSensor.log());
                 telemetry.addData("x: ", newSpindexer.x);
                 telemetry.addData("Pos State: ", newSpindexer.posState);
                 telemetry.addData("Spindexer Power", newSpindexer.spindexer.getPower());
