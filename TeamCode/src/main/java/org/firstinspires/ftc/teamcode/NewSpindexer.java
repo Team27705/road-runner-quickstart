@@ -11,12 +11,8 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.arcrobotics.ftclib.util.Timing;
 
 import org.firstinspires.ftc.teamcode.subsystems.RTPTorctex;
-
-import java.sql.Time;
-import java.util.concurrent.TimeUnit;
 
 public class NewSpindexer {
     //include spindexer servo, light, booktkicker, and color sensor
@@ -52,7 +48,7 @@ public class NewSpindexer {
     }
     private enum SpindexerState {
         Ready,
-        ChangeChamberClockwise,
+        ChangeToEmptyChamber,
         IsSpinning
     }
 
@@ -67,8 +63,8 @@ public class NewSpindexer {
     private SpindexerState spindexerState;
     private KickerState kickerState;
 
-    private int[] intakePositions = {60,180,330};//index 0 is the degree to send slot 1 to intake, etc //150ish jumps each time might be lower
-    private int[] outTakePositions = {270, 150, 30}; //index 0 is the degree to send slot 1 to outtake, etc
+    private int[]  outTakePositions = {60,180,330};//index 0 is the degree to send slot 1 to intake, etc //150ish jumps each time might be lower
+    private int[] intakePositions = {270, 150, 30}; //index 0 is the degree to send slot 1 to outtake, etc
     private int currentChamber;
     public String x;
 
@@ -231,16 +227,18 @@ public class NewSpindexer {
         }
 
         bootkickerFSM();
-//        handleIndexingMode();
+        handleIndexingMode();
+        spindexerFSM();
         //shooting modes
     }
 
     public void bootkickerFSM () {
         switch (kickerState) {
             case Ready:
+                bootkickerCalled = false;
                 break;
             case SendKickerUp:
-                canSpin = false;
+                bootkickerCalled = true;
                 bootkicker.setPosition(0.45);
                 kickerState = KickerState.SendKickerDown;
                 bootKickerTimer.reset();
@@ -254,21 +252,26 @@ public class NewSpindexer {
                 break;
             case WaitTillDown:
                 if (bootKickerTimer.milliseconds() >= BOOTKICKER_DELAY) {
-                    canSpin = true;
                     kickerState = KickerState.Ready;
                 }
                 break;
         }
     }
+
     public void spindexerFSM () {
         switch (spindexerState) {
             case Ready:
                 break;
-            case ChangeChamberClockwise:
-                if (canSpin) {
-                    currentChamber++;
-                    currentChamber = currentChamber % 3;//when changing from shooting manually set currentChamber to
-                    spindexer.setTargetRotation(currentChamber);
+            case ChangeToEmptyChamber: //only use for intake
+                if (canSpin()) {
+                    for (int i = 0; i < 3; i++) {
+                        if (inventory[i].equals("E")) {
+                            currentChamber = i;
+                            spindexer.setTargetRotation(intakePositions[i]);
+                            spindexerState = SpindexerState.IsSpinning;
+                            break;
+                        }
+                    }
                 }
                 break;
             case IsSpinning:
@@ -276,12 +279,13 @@ public class NewSpindexer {
                     spindexerState = SpindexerState.Ready;
                 }
                 break;
-
-
         }
     }
+    public boolean canSpin () {
+        return (!bootkickerCalled && spindexerState.equals(SpindexerState.Ready));
+    }
     public void handleIndexingMode () {
-        if (!canSpin || !spindexerState.equals(SpindexerState.Ready)) return;
+        if (!canSpin()) return;
         if (spindexerMode.equals(SpindexerMode.Outtake)) {
 //            if () {
 //
@@ -289,8 +293,52 @@ public class NewSpindexer {
         }
         else if (spindexerMode.equals(SpindexerMode.Intake) && !isFull()) {
             updateColorSensor();
-
         }
+    }
+
+    public void updateColorSensor() {
+//         NormalizedRGBA colors = colorSensor.getNormalizedColors();
+//         RGB = new double[] {colors.red, colors.green, colors.blue};
+        String colorDetected = detectArtifactColor();
+
+        if (colorDetected.equals("E")) {
+            colorFound = false;
+            return;
+        }
+
+        if (!colorFound) {
+            colorFound = true;
+            colorStartTime = System.currentTimeMillis();
+        }
+
+        if (System.currentTimeMillis() - colorStartTime >= TIME_TO_DETECT) {
+            if (inventory[currentChamber].equals("E")) {
+                inventory[currentChamber] = colorDetected;
+                spindexerState = SpindexerState.ChangeToEmptyChamber;
+            }
+            colorStartTime = 0;
+            colorFound = true;
+            //deactivate colorSensor
+        }
+    }
+
+    public String detectArtifactColor () {
+        r = colorSensor.red(); //test if you dont need remove g> r and b > r and see if it still works
+        g = colorSensor.green();
+        b = colorSensor.blue();
+        opacity = colorSensorARGB();
+        if (opacity >= 300000000) {
+            return "E";
+        } else if (g > r && g > b && g > 50 && g < 600) {
+            return "G";
+        } else if (b > r && b > g && b > 50 && b < 600) { // for purple check
+            return "P";
+        }
+        else return "E";
+    }
+
+    public int colorSensorARGB () {
+        return colorSensor.argb();
     }
 
 
@@ -350,71 +398,6 @@ public class NewSpindexer {
         return false;
     }
 
-    public void resetServo () {
-        if (bootkicker.getPosition() != 0 && bootkickerTimeOut.milliseconds() >= 250 && isSpinning) {
-            bootkicker.setPosition(0);
-            bootkickerClock.reset();
-            kickerIsRunning = false;
-        }
-    }
-
-//    public void kick () {
-//        if (bootkicker.getPosition() != .45 && bootkickerClock.milliseconds() >= 250 && !isSpinning) {
-//            bootkicker.setPosition(.45);
-//            bootkickerTimeOut.reset();
-//            kickerIsRunning = true;
-//        }
-//
-//
-//    }
-
-    public void updateColorSensor() {
-//         NormalizedRGBA colors = colorSensor.getNormalizedColors();
-//         RGB = new double[] {colors.red, colors.green, colors.blue};
-        String colorDetected = detectArtifactColor();
-
-        if (colorDetected.equals("E")) {
-            colorFound = false;
-            return;
-        }
-
-        if (!colorFound) {
-            colorFound = true;
-            colorStartTime = System.currentTimeMillis();
-        }
-
-        if (System.currentTimeMillis() - colorStartTime >= TIME_TO_DETECT) {
-            if (inventory[currentChamber].equals("E")) {
-                inventory[currentChamber] = colorDetected;
-//                spindexerState = SpindexerState.
-            }
-            colorStartTime = 0;
-            colorFound = true;
-            //deactivate colorSensor
-        }
-    }
-
-    public String detectArtifactColor () {
-        r = colorSensor.red();
-        g = colorSensor.green();
-        b = colorSensor.blue();
-        opacity = colorSensorARGB();
-        if (opacity >= 200000000) {
-            return "E";
-        } else if (g > r && g > b && g > 50 && g < 600) {
-            return "G";
-        } else if (b > r && b > g && b > 50 && b < 600) { // for purple check
-            return "P";
-        }
-        else return "E";
-    }
-
-    public int colorSensorARGB () {
-        return colorSensor.argb();
-    }
-    public double[] getColors() {
-        return RGB;
-    }
 
     public boolean isFull() {
         for (int i = 0; i < 3; i++) {
@@ -425,28 +408,17 @@ public class NewSpindexer {
         return true;
     }
 
-    public void rotateSpindexerClockwise() {
-    }
-
-
     @SuppressLint("DefaultLocale")
     public String log () {
 
-        return "Red: " + r + "\nGreen: " + g + "\nBlue: " + b + "\nARGB: " + colorSensorARGB() + "\n Artifact Color: " + detectArtifactColor();
-//        return String.format(
-//                    "Red: %.10f\n"+
-//                    "Green: %.10f\n"+
-//                    "Blue: %.10f\n"+
-//                            "ARGB: \n"+"Color Artifact: \n",
-//                    r,
-//                    g,
-//                    b,
-//                    colorSensorARGB(),
-//                    detectArtifactColor()
-//        );
+        return "Red: " + r
+                + "\nGreen: " + g
+                + "\nBlue: " + b
+                + "\nARGB: " + colorSensorARGB()
+                + "\n Artifact Color: " + detectArtifactColor();
     }
 
-    @TeleOp(name = "Color Sensor Test", group = "test")
+    @TeleOp(name = "Test Spindexer", group = "test")
     public static class ColorSensorTest extends LinearOpMode{
 
         @Override
