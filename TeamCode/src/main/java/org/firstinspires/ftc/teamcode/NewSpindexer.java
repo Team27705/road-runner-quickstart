@@ -271,48 +271,59 @@ public class NewSpindexer {
         }
     }
 
-    public void updateColorSensor() {
+    public class ColorSensor {
+        public void update() {
 //         NormalizedRGBA colors = colorSensor.getNormalizedColors();
 //         RGB = new double[] {colors.red, colors.green, colors.blue};
-        String colorDetected = detectArtifactColor();
+            String colorDetected = detectArtifactColor();
 
-        if (colorDetected.equals("E")) {
-            colorFound = false;
-            return;
-        }
-
-        if (!colorFound) {
-            colorFound = true;
-            colorStartTime = System.currentTimeMillis();
-        }
-
-        if (System.currentTimeMillis() - colorStartTime >= TIME_TO_DETECT) {
-            if (inventory[currentChamber].equals("E")) {
-                inventory[currentChamber] = colorDetected;
-                spindexerState = SpindexerState.SpinToEmpty;
+            if (colorDetected.equals("E")) {
+                colorFound = false;
+                return;
             }
-            colorStartTime = 0;
-            colorFound = true;
-            //deactivate colorSensor
+
+            if (!colorFound) {
+                colorFound = true;
+                colorStartTime = System.currentTimeMillis();
+            }
+
+            if (System.currentTimeMillis() - colorStartTime >= TIME_TO_DETECT) {
+                if (inventory[currentChamber].equals("E")) {
+                    inventory[currentChamber] = colorDetected;
+                    spindexerState = SpindexerState.SpinToEmpty;
+                }
+                colorStartTime = 0;
+                colorFound = true;
+                //deactivate colorSensor
+            }
         }
-    }
 
-    public String detectArtifactColor() {
-        r = colorSensor.red(); //test if you dont need remove g> r and b > r and see if it still works
-        g = colorSensor.green();
-        b = colorSensor.blue();
-        opacity = colorSensorARGB();
-        if (opacity >= 300000000) {
-            return "E";
-        } else if (g > r && g > b && g > 50 && g < 600) {
-            return "G";
-        } else if (b > r && b > g && b > 50 && b < 600) { // for purple check
-            return "P";
-        } else return "E";
-    }
+        public String detectArtifactColor() {
+            r = colorSensor.red(); //test if you dont need remove g> r and b > r and see if it still works
+            g = colorSensor.green();
+            b = colorSensor.blue();
+            opacity = colorSensorARGB();
+            if (opacity >= 300000000) {
+                return "E";
+            } else if (g > r && g > b && g > 50 && g < 600) {
+                return "G";
+            } else if (b > r && b > g && b > 50 && b < 600) { // for purple check
+                return "P";
+            } else return "E";
+        }
 
-    public int colorSensorARGB() {
-        return colorSensor.argb();
+        public int rawARGB() {
+            return colorSensor.argb();
+        }
+
+        public String log() {
+
+            return "Red: " + r
+                    + "\nGreen: " + g
+                    + "\nBlue: " + b
+                    + "\nARGB: " + rawARGB()
+                    + "\nArtifact Color: " + detectArtifactColor();
+        }
     }
 
     public void setMotif(int motifTagNum) { //may not be needed
@@ -378,16 +389,6 @@ public class NewSpindexer {
     }
 
 //    public void feedFromIntake () {
-
-    @SuppressLint("DefaultLocale")
-    public String log() {
-
-        return "Red: " + r
-                + "\nGreen: " + g
-                + "\nBlue: " + b
-                + "\nARGB: " + colorSensorARGB()
-                + "\n Artifact Color: " + detectArtifactColor();
-    }
 
     private enum SpindexerMode {
         Intake,
