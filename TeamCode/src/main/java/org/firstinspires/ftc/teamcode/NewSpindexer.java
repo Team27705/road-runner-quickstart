@@ -84,7 +84,7 @@ public class NewSpindexer {
 
     private static final int TIME_TO_DETECT = 50;
     private static final int BOOTKICKER_DELAY = 200;
-    private int r,g,b;
+    private int r,g,b, opacity;
     //Angle Rotations for intake:
     //Slot 1: 60?
     //slot 2; 120?
@@ -396,15 +396,15 @@ public class NewSpindexer {
         r = colorSensor.red();
         g = colorSensor.green();
         b = colorSensor.blue();
-        if (g > r && g > b && g > 80 && g < 600) {
+        opacity = colorSensorARGB();
+        if (opacity >= 200000000) {
+            return "E";
+        } else if (g > r && g > b && g > 50 && g < 600) {
             return "G";
-        }
-        else if (b > r && b > g && b > 80 && b < 600) { // for purple check
+        } else if (b > r && b > g && b > 50 && b < 600) { // for purple check
             return "P";
         }
-        else {
-            return "E";
-        }
+        else return "E";
     }
 
     public int colorSensorARGB () {
@@ -429,17 +429,19 @@ public class NewSpindexer {
 
     @SuppressLint("DefaultLocale")
     public String log () {
-        return String.format(
-                    "Red: %.10f\n"+
-                    "Green: %.10f\n"+
-                    "Blue: %.10f\n"+
-                            "ARGB: \n",
-                    r,
-                    g,
-                    b,
-                    colorSensorARGB(),
-                    detectArtifactColor()
-        );
+
+        return "Red: " + r + "\nGreen: " + g + "\nBlue: " + b + "\nARGB: " + colorSensorARGB() + "\n Artifact Color: " + detectArtifactColor();
+//        return String.format(
+//                    "Red: %.10f\n"+
+//                    "Green: %.10f\n"+
+//                    "Blue: %.10f\n"+
+//                            "ARGB: \n"+"Color Artifact: \n",
+//                    r,
+//                    g,
+//                    b,
+//                    colorSensorARGB(),
+//                    detectArtifactColor()
+//        );
     }
 
     @TeleOp(name = "Color Sensor Test", group = "test")
