@@ -16,15 +16,14 @@ public class NewSpindexer {
     //include spindexer servo, light, booktkicker, and color sensor
     //note:deprecate Spindexer.java once done
 
-    private static final int TIME_TO_DETECT = 25;
-    private static final int BOOTKICKER_DELAY = 400;
+    // Static constants
+    private static final int TIME_TO_DETECT = 25; //millis TODO: Increase delay and test
+    private static final int BOOTKICKER_DELAY = 400; //millis
     public static String[] motif;
     private static boolean isInitalized;
+
     public String x;
     public String posState;
-
-    public String detectTimerPass;
-
 
     // Hardware
     private final RTPTorctex sorter;
@@ -35,19 +34,15 @@ public class NewSpindexer {
     private final ColorSensor colorSensor;
     // Bot Variables
     private String[] inventory = {"E", "E", "E"}; //E = empty, P = purple, G = green
-    private final ElapsedTime bootkickerClock = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-    private final ElapsedTime bootkickerTimeOut = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-
 
     // State Variables
-    private boolean kickerIsRunning;
     private boolean canSpin;
-    private boolean isSpinning;
     private boolean bootkickerCalled;
     private SpindexerMode spindexerMode;
     private SorterState sorterState;
     private KickerState kickerState;
-    private final int[] outTakePositions = {60, 180, 330};//index 0 is the degree to send slot 1 to intake, etc //150ish jumps each time might be lower
+    private ShootSequenceState shootSequenceState;
+    private final int[] outTakePositions = {190, 310, 70}; //index 0 is the degree to send slot 1 to intake, etc
     private final int[] intakePositions = {10, 130, 250}; //index 0 is the degree to send slot 1 to outtake, etc
     private int currentChamber;
     private int teleopMotif;
@@ -56,12 +51,11 @@ public class NewSpindexer {
     private final ElapsedTime bootKickerTimer;
     private final ElapsedTime sorterTimer;
     private final ElapsedTime colorSensorTimer;
+    private final ElapsedTime shootSequenceTimer;
 
     private int currentTargetMotifNum = 0;
-    private int shootingStep = 0;
     public String flagActive;
 
-//    private Timing.Timer bootKickerTimer;
     private int r, g, b, opacity;
 
 
@@ -79,77 +73,25 @@ public class NewSpindexer {
         bootkicker.setDirection(Servo.Direction.REVERSE);
 
         if (auto) {
-            inventory = new String[]{"P", "G", "P"};
+            inventory = new String[] {"P", "G", "P"}; //Todo: physically label chambers 1, 2, 3
             spindexerMode = SpindexerMode.Outtake;
-        } else {
+        }
+        else {
             spindexerMode = SpindexerMode.Intake;
         }
 
         bootKickerTimer = new ElapsedTime();
         sorterTimer = new ElapsedTime();
         colorSensorTimer = new ElapsedTime();
+        shootSequenceTimer = new ElapsedTime();
         isInitalized = false;
     }
-    //        //if color is detected, then set targetPosition of Spindexer
-//    }
-
-
-    //**
-    // Update class is for
-    // */
-
 
     //https://github.com/NgDodo/FTC12209new/blob/master/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Subsystems/Sorter.java#L17
 
-//    public void update() {
-//        //currently does not work servo doesnt respond
-//
-//        if (!initalize) {
-//            bootkicker.setPosition(0);
-//            bootkickerClock.reset();
-//            bootkickerTimeOut.reset();
-//            kickerIsRunning = false;
-//            isSpinning = false;
-//            initalize = true;
-//        }
-//
-//
-//
-//        //update spindexer PID
-//        if (kickerIsRunning || bootkickerClock.milliseconds() < 250)  {
-//            canSpin = false;
-//            x = "breaking";
-//            return;
-//        }
-//        canSpin = true;
-//        x = "not breaking";
-//
-//        spindexer.update();
-//        if (Math.abs(spindexer.getPower()) > .1) {
-//            isSpinning = true;
-//            posState = "not at pos";
-//            return;
-//        }
-//        posState = "at pos";
-//
-//        if (isSpinning) return;
-//
-//        updateColorSensor();
-//
-//        //no colors detected do not spin
-//        //two modes, one for feeding the spindexer, one for sending it to outtake
-//        //switch them with a boolean that gets updated from controller buttons or the auto sets the variables
-//        if (spindexerMode == SpindexerMode.Intake ) {
-//            if (!getColor().equals("E")) {
-//                feedFromIntake();
-//            }
-//        }
-//        else if (spindexerMode == SpindexerMode.Outtake) {
-    ////            if () {
-    ////
-    ////            }
-//        }
-//        //set target?
+    //**
+    // This update class is for auton
+    // *//
 
     public void update() {
         if (!isInitalized) {
@@ -157,13 +99,44 @@ public class NewSpindexer {
             canSpin = true;
 
             spindexerMode = SpindexerMode.Outtake;
+
+            kickerState = KickerState.Ready;
+            sorterState = SorterState.Ready;
+
+            isInitalized = true;
+//            currentChamber = 0;
+            return;
+        }
+
+        //only let the Torctex PID update if the kicker is down. May have to forcibly set power in a else {.setPower(0);}
+        if (kickerState.equals(KickerState.Ready)) {
+            sorter.update();
+        }
+
+        if (spindexerMode.equals(SpindexerMode.Outtake)) {
+            AutoShootingSequenceAuton();
+        }
+        else if (spindexerMode.equals(SpindexerMode.Intake)) {
+            colorSensor.update();
         }
 
 
+
+//        if () {}
+
+        bootkickerFSM();
+        handleIndexingMode();
+        sorterFSM();
+
     }
 
+
+    //**
+    // This update class is for teleop
+    // *//
+
     public void update(Gamepad gamepad1) { //this is for teleop
-        if (!isInitalized) { //ALWAYS BRING BOOTKICKER DOWN AFTER A RUN ALWAYS!!!!!
+        if (!isInitalized) { //ALWAYS BRING BOOTKICKER DOWN AFTER A RUN ALWAYS!!!!! NEVER LET IT ALIGN ON A WALL
             bootkicker.setPosition(0);
             canSpin = true;
 
@@ -176,11 +149,12 @@ public class NewSpindexer {
 
             currentChamber = 0;
             isInitalized = true;
+            return;
         }
 
         sorter.update();
 
-        if (gamepad1.aWasReleased()) { // choose motif from button presses, have this add to telem
+        if (gamepad1.aWasReleased()) { // choose motif from button presses, have this add to telem, prob deprecate this in final
             switch (teleopMotif) {
                 case 1:
                     motif = new String[]{"G", "P", "P"};
@@ -214,7 +188,7 @@ public class NewSpindexer {
 
         bootkickerFSM();
         handleIndexingMode();
-        spindexerFSM();
+        sorterFSM();
         //shooting modes
     }
 
@@ -244,23 +218,7 @@ public class NewSpindexer {
         }
     }
 
-    public void AutoShootingSequence () {
 
-        switch (shootingStep) {
-            case (0):
-                break;
-            case (1): //if shootStep = 1 initate
-
-                break;
-            case (2):
-                if () { //create a timer and then check if greater than certain time
-
-                }
-            case (3):
-
-        }
-
-    }
 
 
     //Angle Rotations for intake:
@@ -274,7 +232,7 @@ public class NewSpindexer {
     //slot 3: 30
     //https://docs.ftclib.org/ftclib/features/util#timing-functions replace timers with this
 
-    public void spindexerFSM() {
+    public void sorterFSM() {
         switch (sorterState) {
             case Ready:
                 break;
@@ -294,20 +252,31 @@ public class NewSpindexer {
                 }
                 break;
             case SpinToOuttakeTargetingMotif:
-                for (int chamber = 0; chamber < 3; chamber++) {
-                    if (inventory[chamber].equals(motif[currentTargetMotifNum])) {
-                        sorter.setTargetRotation(outTakePositions[chamber]);
-                        inventory[chamber] = "E";
-                        sorterState = SorterState.Spinning;
-                        break;
-                    }
-                }
+                // doesnt account if nothing in inventory matches
+                int targetPos = getTargetChamberForMotif();
+                sorter.setTargetRotation(outTakePositions[targetPos]);
+                inventory[targetPos] = "E";
+                sorterState = SorterState.Spinning;
                 break;
-
         }
     }
 
+    public int getTargetChamberForMotif () {
+        for (int i = 0; i < 3; i ++) {
+            if (inventory[i].equals(motif[currentTargetMotifNum])) {
+                currentTargetMotifNum = currentTargetMotifNum + 1 % 3;
+                return i;
+            }
+        }
+        for (int j = 0; j < 3; j ++) {
+            if (!inventory[j].equals("E")) {
+                currentTargetMotifNum = currentTargetMotifNum + 1 % 3;
+                return j;
+            }
+        }
+        return 0;
 
+    }
 
     public boolean canSpin() {
         return (!bootkickerCalled && sorterState.equals(SorterState.Ready));
@@ -319,13 +288,50 @@ public class NewSpindexer {
             if (readyToShoot()) {
 
             }
-//            if () {
-//
-//            }
         }
         else if (spindexerMode.equals(SpindexerMode.Intake) && !isFull()) {
-            colorSensor.update();
+            colorSensor.update(); //call colorSensor.update() to
         }
+    }
+
+    public void AutoShootingSequenceAuton () {
+        //the delay checks should allow for enough time for the flywheel to return to targetVelocity
+
+        if (isEmpty()) { //
+            shootSequenceState = ShootSequenceState.Ready; //last step where it switches back to IntakeMode and goes to empty Chamber 1
+            sorterState = SorterState.SpinToEmptyChamber;
+            spindexerMode = SpindexerMode.Intake;
+            return;
+        }
+
+        switch (shootSequenceState) { //in order to start set shootSequenceState to ChangeChamber
+            case Ready :
+                break;
+            case ChangeChamber: //if shootStep = 1 initate
+                if (sorterState.equals(SorterState.Ready)) {
+                    sorterState = sorterState.SpinToOuttakeTargetingMotif;
+                    shootSequenceState = ShootSequenceState.KickArtifact;
+                    shootSequenceTimer.reset();
+                    break;
+                }
+                break;
+            case KickArtifact:
+                if (sorterState.equals(SorterState.Ready) && shootSequenceTimer.milliseconds() >= 300) { //create a timer and then check if greater than certain time
+                    kickerState = KickerState.SendUp;
+                    shootSequenceState = ShootSequenceState.WaitForKicker;
+                    shootSequenceTimer.reset();
+                }
+                break;
+            case WaitForKicker:
+                if (shootSequenceTimer.milliseconds() >= (BOOTKICKER_DELAY * 2) + 25) {
+                    shootSequenceState = ShootSequenceState.ChangeChamber;
+                }
+                break;
+
+
+
+        }
+
     }
 
     private boolean readyToShoot() {
@@ -368,15 +374,16 @@ public class NewSpindexer {
                 flagActive = "Not flaged";
             }
         }
-
+        //TODO: RETUNE COLOR SENSOR
+        //TODO: Optional get feedback from the GoBuilda light when updating/detecting a artifact
         public String detectArtifactColor() {
             r = revColorSensor.red(); //test if you dont need remove g> r and b > r and see if it still works
             g = revColorSensor.green();
             b = revColorSensor.blue();
             opacity = getARGB();
-            if (opacity >= 300000000) {
+            if (opacity >= 300000000) { // higher opacity means no object detected
                 return "E";
-            } else if (g > r && g > b && g > 50 && g < 600) {
+            } else if (g > r && g > b && g > 50 && g < 600) { //sometimes g or b will go to some absurd value in the hundreds
                 return "G";
             } else if (b > r && b > g && b > 50 && b < 600) { // for purple check
                 return "P";
@@ -408,28 +415,8 @@ public class NewSpindexer {
         }
     }
 
-    /// /        if (isFull()) { //checks if full // may be unncessary
-    /// /            return;
-    /// /        }
-//        for (int i = 0; i < 3; i++) {
-//            if (inventory[i].equals("E")) {
-//                spindexer.changeTargetRotation(intakePositions[i]);
-//                currentChamber = i;
-//                inventory[currentChamber] = getColor();
-//                return;
-//            }
-//        }
-//    }
 
-    public boolean checkInventory(int targetColor) {
-        for (int j = 0; j < 3; j++) {
-            if (inventory[j].equals(motif[targetColor])) {
-                sorter.changeTargetRotation(outTakePositions[j]);
-                return true;
-            }
-        }
-        return false;
-    }
+
     public String printInventory () {
         return "Chamber 1: " + inventory[0] + "\n Chamber 2: " +  inventory[1] + "\n Chamber 3: " + inventory[2];
     }
@@ -450,6 +437,15 @@ public class NewSpindexer {
             }
         }
         return true;
+    }
+    public boolean checkInventory(int targetColor) {
+        for (int j = 0; j < 3; j++) {
+            if (inventory[j].equals(motif[targetColor])) {
+                sorter.changeTargetRotation(outTakePositions[j]);
+                return true;
+            }
+        }
+        return false;
     }
 
 //    public void feedFromIntake () {
@@ -472,6 +468,13 @@ public class NewSpindexer {
         SendUp,
         SendDown,
         WaitTillDown
+    }
+
+    private enum ShootSequenceState {
+        Ready,
+        ChangeChamber,
+        WaitForKicker,
+        KickArtifact
     }
 
     @TeleOp(name = "Test Spindexer", group = "test")
