@@ -2,18 +2,16 @@ package org.firstinspires.ftc.teamcode.telop;
 
 
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Intake;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
-import org.firstinspires.ftc.teamcode.Outtake;
 import org.firstinspires.ftc.teamcode.Spindexer;
+import org.firstinspires.ftc.teamcode.Outtake;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +40,7 @@ public class DriverTelop extends LinearOpMode {
         driveTrain = new MecanumDrive(this.hardwareMap, intialPosition);
         intake = new Intake(this.hardwareMap);
         outtake = new Outtake(this.hardwareMap);
-        spindexer = new Spindexer(this.hardwareMap);
+        spindexer = new Spindexer(this.hardwareMap, false);
 
         waitForStart();
         while (opModeIsActive()) {
@@ -59,8 +57,6 @@ public class DriverTelop extends LinearOpMode {
 //
 //            }
 //            runningActions = newActions;
-
-            updateTelem();
         }
 
 
@@ -96,41 +92,18 @@ public class DriverTelop extends LinearOpMode {
     }
 
     public void controllerBehaviorB () {
+        spindexer.update(gamepad2);
         if (gamepad2.x) {
             outtake.ramp();
         }
-
         if (gamepad2.b) {
             outtake.runOuttakeClose();
         }
-
         if (gamepad2.a) {
             outtake.stop();
         }
-
-        if (gamepad2.dpad_up) {
-            spindexer.kickServo();
-        }
-        if (gamepad2.dpad_down) {
-            spindexer.resetServo();
-        }
-
-        if (gamepad2.y) {
-            spindexer.cycleSpindexer();
-        }
-
-//        if (gamepad2.right_bumper) {
-//            spindexer.reAdjust();
-//        }
     }
 
     public void updateTelem () {
-//        RevColorSensorV3 colorSensor = spindexer.getColorSensor();
-//
-//        telemetry.addData("Red:", colorSensor.red() );
-//        telemetry.addData("Green:", colorSensor.green() );
-//        telemetry.addData("Blue:", colorSensor.blue() );
-//        telemetry.update();
-
     }
 }
