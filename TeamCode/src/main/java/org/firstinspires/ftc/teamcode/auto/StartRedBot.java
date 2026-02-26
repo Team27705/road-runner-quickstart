@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.subsystems.hardwares.limelight.Limelighter;
 import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
 
-public class StartRedBottom extends LinearOpMode {
+public class StartRedBot extends LinearOpMode {
 
     MecanumDrive mecanumDrive;
     Limelighter limelight;
