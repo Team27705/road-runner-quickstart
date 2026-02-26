@@ -117,22 +117,16 @@ public class NewSpindexer {
             colorSensor.update();
         }
 
-
-
-//        if () {}
-
         bootkickerFSM();
         handleIndexingMode();
         sorterFSM();
 
     }
 
-
-    //**
-    // This update class is for teleop
-    // *//
-
-    public void update(Gamepad gamepad1) { //this is for teleop
+    /**
+     * Overloaded `update()` for teleop use. Note the addition of gamepad as input
+     */
+    public void update(Gamepad gamepad1) {
         if (!isInitalized) { //ALWAYS BRING BOOTKICKER DOWN AFTER A RUN ALWAYS!!!!! NEVER LET IT ALIGN ON A WALL
             bootkicker.setPosition(0);
             canSpin = true;
