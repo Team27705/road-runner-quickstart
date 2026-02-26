@@ -30,7 +30,7 @@ public class NewSpindexer {
     private final Servo bootkicker;
     private final ColorSensor colorSensor;
     // Bot Variables
-    private String[] inventory = {"E", "E", "E"}; //E = empty, P = purple, G = green
+    private String[] inventory = {"G", "P", "P"}; //E = empty, P = purple, G = green
 
     // State Variables
     private boolean canSpin;
@@ -69,6 +69,7 @@ public class NewSpindexer {
         bootkicker = hardwareMap.get(Servo.class, "bootkicker");
         bootkicker.setDirection(Servo.Direction.REVERSE);
 
+        shootSequenceState = ShootSequenceState.Ready;
         if (auto) {
             inventory = new String[] {"P", "G", "P"}; //Todo: physically label chambers 1, 2, 3
             spindexerMode = SpindexerMode.Outtake;
@@ -143,7 +144,12 @@ public class NewSpindexer {
             return;
         }
 
-        sorter.update();
+        if (kickerState.equals(KickerState.Ready)) {
+            sorter.update();
+        }
+        else {
+            sorter.setPower(0);
+        }
 
         if (gamepad1.aWasReleased()) { // choose motif from button presses, have this add to telem, prob deprecate this in final
             switch (teleopMotif) {
@@ -163,13 +169,11 @@ public class NewSpindexer {
         }
 
         if (gamepad1.xWasReleased()) {
-            spindexerMode = SpindexerMode.Outtake;
-            gamepad1.setLedColor(1, 0, 0, 100000);
+            setSpindexerMode(SpindexerMode.Outtake);
         }
 
         if (gamepad1.backWasReleased()) {
-            spindexerMode = SpindexerMode.Intake;
-            gamepad1.setLedColor(0, 1, 0, 100000);
+            setSpindexerMode(SpindexerMode.Intake);
         }
 
         //check in Intake mode, the spindexer is not changing target or moving, kicker isnt doing anything,
@@ -177,6 +181,15 @@ public class NewSpindexer {
                 && sorterState.equals(SorterState.Ready) && spindexerMode.equals(SpindexerMode.Intake)) {
             //call fsm for servo
             kickerState = KickerState.SendUp;
+        }
+
+        switch (spindexerMode) {
+            case Intake:
+                gamepad1.setLedColor(0, 1, 0, 100000);
+                break;
+            case Outtake:
+                gamepad1.setLedColor(1, 0, 0, 100000);
+                break;
         }
 
         bootkickerFSM();
@@ -275,55 +288,72 @@ public class NewSpindexer {
         return (!bootkickerCalled && sorterState.equals(SorterState.Ready));
     }
 
-    public void handleIndexingMode() {
-        if (!canSpin()) return;
-        if (spindexerMode.equals(SpindexerMode.Outtake)) {
-            if (readyToShoot()) {
-                shootSequenceState = ShootSequenceState.ChangeChamber;
-            }
-            AutoShootingSequenceAuton();
-        }
-        else if (spindexerMode.equals(SpindexerMode.Intake) && !isFull()) {
-            colorSensor.update(); //call colorSensor.update() to
+    public void setSpindexerMode(SpindexerMode mode) {
+        this.spindexerMode = mode;
+        if (mode == SpindexerMode.Outtake) {
+            // Reset shooting logic for a fresh round
+            this.currentTargetMotifNum = 0;
+            this.shootSequenceState = ShootSequenceState.ChangeChamber;
+        } else {
+            // Reset sorter to target an empty chamber for intake
+            this.sorterState = SorterState.SpinToEmptyChamber;
         }
     }
 
-    public void AutoShootingSequenceAuton () {
-        //the delay checks should allow for enough time for the flywheel to return to targetVelocity
+    public void handleIndexingMode() {
+        if (!canSpin()) return;
 
-        if (isEmpty()) { //
-            shootSequenceState = ShootSequenceState.Ready; //last step where it switches back to IntakeMode and goes to empty Chamber 1
-            sorterState = SorterState.SpinToEmptyChamber; //doesnt automatically update light
+        if (spindexerMode.equals(SpindexerMode.Outtake)) {
+            // Just run the sequence; the mode-switch handles the start state
+            AutoShootingSequenceAuton();
+        }
+        else if (spindexerMode.equals(SpindexerMode.Intake) && !isFull()) {
+            colorSensor.update();
+        }
+    }
+
+    public void AutoShootingSequenceAuton() {
+        // If we are empty, stop everything and go to intake
+        if (isEmpty()) {
+            shootSequenceState = ShootSequenceState.Ready;
             spindexerMode = SpindexerMode.Intake;
+            currentTargetMotifNum = 0;
+            sorterState = SorterState.SpinToEmptyChamber;
             return;
         }
 
-        switch (shootSequenceState) { //in order to start set shootSequenceState to ChangeChamber
-            case Ready :
+        switch (shootSequenceState) {
+            case Ready:
+                // NEW: If we aren't empty and we are in Outtake mode,
+                // automatically start the next shot.
+                if (spindexerMode == SpindexerMode.Outtake) {
+                    shootSequenceState = ShootSequenceState.ChangeChamber;
+                }
                 break;
-            case ChangeChamber: //if shootStep = 1 initate
-                if (sorterState.equals(SorterState.Ready) && kickerState.equals(KickerState.Ready)) {
-                    sorterState = sorterState.SpinToOuttakeTargetingMotif;
+
+            case ChangeChamber:
+                if (sorterState == SorterState.Ready && kickerState == KickerState.Ready) {
+                    sorterState = SorterState.SpinToOuttakeTargetingMotif;
                     shootSequenceState = ShootSequenceState.KickArtifact;
                     shootSequenceTimer.reset();
-                    break;
                 }
                 break;
+
             case KickArtifact:
-                if (sorterState.equals(SorterState.Ready)) { //create a timer and then check if greater than certain time
+                if (sorterState == SorterState.Ready) {
                     kickerState = KickerState.SendUp;
                     shootSequenceState = ShootSequenceState.WaitForKicker;
-                    shootSequenceTimer.reset();
                 }
                 break;
+
             case WaitForKicker:
-                if (kickerState.equals(KickerState.Ready)) {
+                if (kickerState == KickerState.Ready) {
+                    // By setting this to Ready, the NEXT frame will hit the
+                    // 'Ready' case above and loop back to 'ChangeChamber'
                     shootSequenceState = ShootSequenceState.Ready;
                 }
                 break;
-
         }
-
     }
 
     private boolean readyToShoot() {
