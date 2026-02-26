@@ -19,7 +19,7 @@ public class NewSpindexer {
     // Static constants
     private static final int TIME_TO_DETECT = 25; //millis TODO: Increase delay and test
     private static final int BOOTKICKER_DELAY = 400; //millis
-    public static String[] motif;
+    public static String[] motif = new String[]{"G", "P", "P"};
     private static boolean isInitalized;
 
     public String x;
@@ -147,27 +147,29 @@ public class NewSpindexer {
 
         if (gamepad1.aWasReleased()) { // choose motif from button presses, have this add to telem, prob deprecate this in final
             switch (teleopMotif) {
-                case 1:
+                case 0:
                     motif = new String[]{"G", "P", "P"};
                     teleopMotif++;
                     break;
-                case 2:
+                case 1:
                     motif = new String[]{"P", "G", "P"};
                     teleopMotif++;
                     break;
-                case 3:
-                    motif = new String[]{"P", "G", "G"};
-                    teleopMotif = 4;
+                case 2:
+                    motif = new String[]{"P", "P", "G"};
+                    teleopMotif = 0;
                     break;
             }
         }
 
         if (gamepad1.xWasReleased()) {
             spindexerMode = SpindexerMode.Outtake;
+            gamepad1.setLedColor(1, 0, 0, 100000);
         }
 
         if (gamepad1.backWasReleased()) {
             spindexerMode = SpindexerMode.Intake;
+            gamepad1.setLedColor(0, 1, 0, 100000);
         }
 
         //check in Intake mode, the spindexer is not changing target or moving, kicker isnt doing anything,
@@ -255,13 +257,13 @@ public class NewSpindexer {
     public int getTargetChamberForMotif () {
         for (int i = 0; i < 3; i ++) {
             if (inventory[i].equals(motif[currentTargetMotifNum])) {
-                currentTargetMotifNum = currentTargetMotifNum + 1 % 3;
+                currentTargetMotifNum = (currentTargetMotifNum + 1) % 3;
                 return i;
             }
         }
         for (int j = 0; j < 3; j ++) {
             if (!inventory[j].equals("E")) {
-                currentTargetMotifNum = currentTargetMotifNum + 1 % 3;
+                currentTargetMotifNum = (currentTargetMotifNum + 1) % 3;
                 return j;
             }
         }
@@ -291,7 +293,7 @@ public class NewSpindexer {
 
         if (isEmpty()) { //
             shootSequenceState = ShootSequenceState.Ready; //last step where it switches back to IntakeMode and goes to empty Chamber 1
-            sorterState = SorterState.SpinToEmptyChamber;
+            sorterState = SorterState.SpinToEmptyChamber; //doesnt automatically update light
             spindexerMode = SpindexerMode.Intake;
             return;
         }
@@ -300,7 +302,7 @@ public class NewSpindexer {
             case Ready :
                 break;
             case ChangeChamber: //if shootStep = 1 initate
-                if (sorterState.equals(SorterState.Ready)) {
+                if (sorterState.equals(SorterState.Ready) && kickerState.equals(KickerState.Ready)) {
                     sorterState = sorterState.SpinToOuttakeTargetingMotif;
                     shootSequenceState = ShootSequenceState.KickArtifact;
                     shootSequenceTimer.reset();
@@ -308,26 +310,28 @@ public class NewSpindexer {
                 }
                 break;
             case KickArtifact:
-                if (sorterState.equals(SorterState.Ready) && shootSequenceTimer.milliseconds() >= 300) { //create a timer and then check if greater than certain time
+                if (sorterState.equals(SorterState.Ready)) { //create a timer and then check if greater than certain time
                     kickerState = KickerState.SendUp;
                     shootSequenceState = ShootSequenceState.WaitForKicker;
                     shootSequenceTimer.reset();
                 }
                 break;
             case WaitForKicker:
-                if (shootSequenceTimer.milliseconds() >= (BOOTKICKER_DELAY * 2) + 25) {
-                    shootSequenceState = ShootSequenceState.ChangeChamber;
+                if (kickerState.equals(KickerState.Ready)) {
+                    shootSequenceState = ShootSequenceState.Ready;
                 }
                 break;
-
-
 
         }
 
     }
 
     private boolean readyToShoot() {
-        return true;
+        if (kickerState.equals(KickerState.Ready) && sorterState.equals(SorterState.Ready)) {
+            return true;
+
+        }
+        return false;
     }
 
     public class ColorSensor {
