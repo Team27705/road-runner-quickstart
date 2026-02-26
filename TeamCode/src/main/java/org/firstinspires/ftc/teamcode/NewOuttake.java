@@ -182,15 +182,19 @@ public class NewOuttake {
                     TrajectoryActionBuilder goForwards = driveTrain.actionBuilder(position)
                             .lineToX(position.position.x - 5); // move 5 inches forward, adjust as needed based on testing
 
+                    gamepad1.setLedColor(1,0,0, 10000);
                     Actions.runBlocking(goForwards.build());
                     position = new Pose2d(position.position.x - 5, position.position.y, 0);
+                    gamepad1.setLedColor(0,1,0, 10000);
                 }
                 if(gamepad1.backWasReleased()) {
                     TrajectoryActionBuilder goBackwards = driveTrain.actionBuilder(position)
                             .lineToX(position.position.x + 5); // move 5 inches forward, adjust as needed based on testing
 
+                    gamepad1.setLedColor(1,0,0, 10000);
                     Actions.runBlocking(goBackwards.build());
                     position = new Pose2d(position.position.x + 5, position.position.y, 0);
+                    gamepad1.setLedColor(0,1,0, 10000);
                 }
 
                 if(gamepad1.dpadUpWasReleased()){
