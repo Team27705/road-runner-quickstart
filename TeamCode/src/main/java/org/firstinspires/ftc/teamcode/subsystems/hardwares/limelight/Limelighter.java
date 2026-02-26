@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.limelight;
+package org.firstinspires.ftc.teamcode.subsystems.hardwares.limelight;
 
 import androidx.annotation.NonNull;
 

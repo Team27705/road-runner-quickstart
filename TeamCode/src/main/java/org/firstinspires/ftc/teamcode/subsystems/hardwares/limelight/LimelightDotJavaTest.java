@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.limelight;
+package org.firstinspires.ftc.teamcode.subsystems.hardwares.limelight;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
