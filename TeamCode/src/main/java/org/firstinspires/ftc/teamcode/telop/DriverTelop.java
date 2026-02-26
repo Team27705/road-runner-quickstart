@@ -8,9 +8,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.Intake;
-import org.firstinspires.ftc.teamcode.MecanumDrive;
-import org.firstinspires.ftc.teamcode.Spindexer;
+import org.firstinspires.ftc.teamcode.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
+import org.firstinspires.ftc.teamcode.subsystems.Spindexer;
 import org.firstinspires.ftc.teamcode.Outtake;
 
 import java.util.ArrayList;
@@ -93,10 +93,10 @@ public class DriverTelop extends LinearOpMode {
 
     public void controllerBehaviorB () {
         spindexer.update(gamepad2);
-        if (gamepad2.x) {
+        if (gamepad2.yWasReleased()) {
             outtake.ramp();
         }
-        if (gamepad2.b) {
+        if (gamepad2.backWasReleased()) {
             outtake.runOuttakeClose();
         }
         if (gamepad2.a) {

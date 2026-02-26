@@ -3,15 +3,13 @@ package org.firstinspires.ftc.teamcode.limelight;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.Drawing;
-import org.firstinspires.ftc.teamcode.limelight.Limelighter;
+import org.firstinspires.ftc.teamcode.roadrunnerDefaults.Drawing;
 
 @Autonomous(name = "Limelight.java Test", group = "Testing")
 public class LimelightDotJavaTest extends LinearOpMode {

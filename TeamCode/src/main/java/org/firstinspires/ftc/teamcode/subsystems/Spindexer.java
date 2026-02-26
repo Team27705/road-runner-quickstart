@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.subsystems.RTPTorctex;
+import org.firstinspires.ftc.teamcode.subsystems.hardwares.RTPTorctex;
 
 import java.util.Arrays;
 
@@ -32,7 +32,7 @@ public class Spindexer {
     private final Servo bootkicker;
     private final ColorSensor colorSensor;
     // Bot Variables
-    private String[] inventory = {"G", "P", "P"}; //E = empty, P = purple, G = green
+    private String[] inventory = {"E", "E", "E"}; //E = empty, P = purple, G = green
 
     // State Variables
     private boolean canSpin;
@@ -56,6 +56,7 @@ public class Spindexer {
     public String flagActive;
 
     private int r, g, b, opacity;
+    private boolean autonShootingSequenceFlag;
 
 
     //https://gm0.org/en/latest/docs/software/concepts/finite-state-machines.html
@@ -98,7 +99,7 @@ public class Spindexer {
             bootkicker.setPosition(0);
             canSpin = true;
 
-            spindexerMode = SpindexerMode.Outtake;
+            spindexerMode = SpindexerMode.AutonWait;
 
             kickerState = KickerState.Ready;
             sorterState = SorterState.Ready;
@@ -112,11 +113,16 @@ public class Spindexer {
         if (kickerState.equals(KickerState.Ready)) {
             sorter.update();
         }
+        else {
+            sorter.setPower(0);
+        }
+
+        if (spindexerMode.equals(SpindexerMode.AutonWait)) return;
 
         if (spindexerMode.equals(SpindexerMode.Outtake)) {
-            AutoShootingSequenceAuton();
+            AutoShootingSequenceAuton(); // may have to create a flag in !
         }
-        else if (spindexerMode.equals(SpindexerMode.Intake)) {
+        else if (spindexerMode.equals(SpindexerMode.Intake) ) { //maybe check if flywheel is currently within target deadzone?
             colorSensor.update();
         }
 
@@ -126,10 +132,17 @@ public class Spindexer {
 
     }
 
+
+    //use this for actions in auton, call update() at the start of the loop and then call this when
+    //you want to
+    public void changeSpindexerMode(SpindexerMode newMode) {
+        this.spindexerMode = newMode;
+    }
+
     /**
      * Overloaded `update()` for teleop use. Note the addition of gamepad as input
      */
-    public void update(Gamepad gamepad1) {
+    public void update(Gamepad gamepad2) {
         if (!isInitalized) { //ALWAYS BRING BOOTKICKER DOWN AFTER A RUN ALWAYS!!!!! NEVER LET IT ALIGN ON A WALL
             bootkicker.setPosition(0);
             canSpin = true;
@@ -153,7 +166,7 @@ public class Spindexer {
             sorter.setPower(0);
         }
 
-        if (gamepad1.aWasReleased()) { // choose motif from button presses, have this add to telem, prob deprecate this in final
+        if (gamepad2.aWasReleased()) { // choose motif from button presses, have this add to telem, prob deprecate this in final
             switch (teleopMotif) {
                 case 0:
                     motif = new String[]{"G", "P", "P"};
@@ -170,16 +183,16 @@ public class Spindexer {
             }
         }
 
-        if (gamepad1.xWasReleased()) {
+        if (gamepad2.xWasReleased()) {
             setSpindexerMode(SpindexerMode.Outtake);
         }
 
-        if (gamepad1.backWasReleased()) {
+        if (gamepad2.backWasReleased()) {
             setSpindexerMode(SpindexerMode.Intake);
         }
 
         //check in Intake mode, the spindexer is not changing target or moving, kicker isnt doing anything,
-        if (gamepad1.dpadUpWasReleased() && kickerState.equals(KickerState.Ready)
+        if (gamepad2.dpadUpWasReleased() && kickerState.equals(KickerState.Ready)
                 && sorterState.equals(SorterState.Ready) && spindexerMode.equals(SpindexerMode.Intake)) {
             //call fsm for servo
             kickerState = KickerState.SendUp;
@@ -187,10 +200,10 @@ public class Spindexer {
 
         switch (spindexerMode) {
             case Intake:
-                gamepad1.setLedColor(0, 1, 0, 100000);
+                gamepad2.setLedColor(0, 1, 0, 100000);
                 break;
             case Outtake:
-                gamepad1.setLedColor(1, 0, 0, 100000);
+                gamepad2.setLedColor(1, 0, 0, 100000);
                 break;
         }
 
@@ -483,7 +496,8 @@ public class Spindexer {
 
     private enum SpindexerMode {
         Intake,
-        Outtake
+        Outtake,
+        AutonWait
     }
 
 
