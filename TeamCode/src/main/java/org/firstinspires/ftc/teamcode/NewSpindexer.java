@@ -12,6 +12,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.subsystems.RTPTorctex;
 
+import java.util.Arrays;
+
 public class NewSpindexer {
     //include spindexer servo, light, booktkicker, and color sensor
     //note:deprecate Spindexer.java once done
@@ -267,21 +269,19 @@ public class NewSpindexer {
         }
     }
 
-    public int getTargetChamberForMotif () {
-        for (int i = 0; i < 3; i ++) {
+    public int getTargetChamberForMotif() {
+        for (int i = 0; i < 3; i++) {
             if (inventory[i].equals(motif[currentTargetMotifNum])) {
-                currentTargetMotifNum = (currentTargetMotifNum + 1) % 3;
+                // REMOVED: inventory[targetPos] = "E";
                 return i;
             }
         }
-        for (int j = 0; j < 3; j ++) {
+        for (int j = 0; j < 3; j++) {
             if (!inventory[j].equals("E")) {
-                currentTargetMotifNum = (currentTargetMotifNum + 1) % 3;
                 return j;
             }
         }
         return 0;
-
     }
 
     public boolean canSpin() {
@@ -291,11 +291,11 @@ public class NewSpindexer {
     public void setSpindexerMode(SpindexerMode mode) {
         this.spindexerMode = mode;
         if (mode == SpindexerMode.Outtake) {
-            // Reset shooting logic for a fresh round
+            // Force the state machine to start
             this.currentTargetMotifNum = 0;
-            this.shootSequenceState = ShootSequenceState.ChangeChamber;
+            this.shootSequenceState = ShootSequenceState.ChangeChamber; // Start immediately
+            this.sorterState = SorterState.Ready; // Interrupt any current spin
         } else {
-            // Reset sorter to target an empty chamber for intake
             this.sorterState = SorterState.SpinToEmptyChamber;
         }
     }
@@ -313,9 +313,8 @@ public class NewSpindexer {
     }
 
     public void AutoShootingSequenceAuton() {
-        // If we are empty, stop everything and go to intake
-        if (isEmpty()) {
-            shootSequenceState = ShootSequenceState.Ready;
+        // Only exit if we are Ready (not in the middle of a shot) AND empty
+        if (shootSequenceState == ShootSequenceState.Ready && isEmpty()) {
             spindexerMode = SpindexerMode.Intake;
             currentTargetMotifNum = 0;
             sorterState = SorterState.SpinToEmptyChamber;
@@ -324,32 +323,38 @@ public class NewSpindexer {
 
         switch (shootSequenceState) {
             case Ready:
-                // NEW: If we aren't empty and we are in Outtake mode,
-                // automatically start the next shot.
-                if (spindexerMode == SpindexerMode.Outtake) {
+                if (spindexerMode == SpindexerMode.Outtake && !isEmpty()) {
                     shootSequenceState = ShootSequenceState.ChangeChamber;
                 }
                 break;
 
             case ChangeChamber:
                 if (sorterState == SorterState.Ready && kickerState == KickerState.Ready) {
-                    sorterState = SorterState.SpinToOuttakeTargetingMotif;
+                    // Determine target
+                    int targetPos = getTargetChamberForMotif();
+                    sorter.setTargetRotation(outTakePositions[targetPos]);
+
+                    // Store which chamber we are about to shoot so we can empty it later
+                    currentChamber = targetPos;
+
+                    sorterState = SorterState.Spinning; // Set to spinning so we wait for arrival
                     shootSequenceState = ShootSequenceState.KickArtifact;
-                    shootSequenceTimer.reset();
                 }
                 break;
 
             case KickArtifact:
                 if (sorterState == SorterState.Ready) {
                     kickerState = KickerState.SendUp;
+                    // NOW we mark it as empty, after the sorter arrived and kicker started
+                    inventory[currentChamber] = "E";
+                    currentTargetMotifNum = (currentTargetMotifNum + 1) % 3;
+
                     shootSequenceState = ShootSequenceState.WaitForKicker;
                 }
                 break;
 
             case WaitForKicker:
                 if (kickerState == KickerState.Ready) {
-                    // By setting this to Ready, the NEXT frame will hit the
-                    // 'Ready' case above and loop back to 'ChangeChamber'
                     shootSequenceState = ShootSequenceState.Ready;
                 }
                 break;
@@ -529,6 +534,8 @@ public class NewSpindexer {
                 telemetry.addData("Spindexer Power", newSpindexer.sorter.getPower());
                 telemetry.addLine(newSpindexer.flagActive);
                 telemetry.addLine(newSpindexer.printInventory());
+                telemetry.addData("Inventory", Arrays.toString(newSpindexer.inventory));
+                telemetry.addData("Shoot State", newSpindexer.shootSequenceState);
                 telemetry.update();
             }
         }
