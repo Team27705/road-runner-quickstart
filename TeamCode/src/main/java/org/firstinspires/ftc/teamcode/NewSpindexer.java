@@ -27,10 +27,7 @@ public class NewSpindexer {
 
     // Hardware
     private final RTPTorctex sorter;
-    private final CRServo crServo;
-    private final AnalogInput analogEncoder;
     private final Servo bootkicker;
-    private final RevColorSensorV3 revColorSensor;
     private final ColorSensor colorSensor;
     // Bot Variables
     private String[] inventory = {"E", "E", "E"}; //E = empty, P = purple, G = green
@@ -63,10 +60,10 @@ public class NewSpindexer {
     //replace the ifs with a switch case
     public NewSpindexer(HardwareMap hardwareMap, boolean auto) {
         //Spindexer Servo
-        crServo = hardwareMap.get(CRServo.class, "Spindexer Servo");
-        analogEncoder = hardwareMap.get(AnalogInput.class, "Spindexer Encoder");
+        CRServo crServo = hardwareMap.get(CRServo.class, "Spindexer Servo");
+        AnalogInput analogEncoder = hardwareMap.get(AnalogInput.class, "Spindexer Encoder");
         sorter = new RTPTorctex(crServo, analogEncoder);
-        revColorSensor = hardwareMap.get(RevColorSensorV3.class, "colorSensor");
+        RevColorSensorV3 revColorSensor = hardwareMap.get(RevColorSensorV3.class, "colorSensor");
         colorSensor = new ColorSensor(revColorSensor);
 
         bootkicker = hardwareMap.get(Servo.class, "bootkicker");
