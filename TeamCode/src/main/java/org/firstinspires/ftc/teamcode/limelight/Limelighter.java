@@ -21,13 +21,11 @@ public class Limelighter {
 
     public final HashMap<Integer, Pose3D> tagPositions = new HashMap<Integer, Pose3D>();
     private final Limelight3A limelight;
-    private final HardwareMap hardwareMap;
 
     public Limelighter(HardwareMap hardwareMap) {
         if (hardwareMap == null) {
             throw new IllegalArgumentException("HardwareMap cannot be null!");
         }
-        this.hardwareMap = hardwareMap;
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.setPollRateHz(100);
         limelight.start();
@@ -44,7 +42,8 @@ public class Limelighter {
     }
 
     @NonNull
-    private static Pose2d getPose2d(LLResult result, double robotYaw) throws MT2FailedException, MT2ZeroedPosException {
+    private static Pose2d getPose2d(LLResult result, double robotYaw)
+            throws MT2FailedException, MT2ZeroedPosException {
         Pose3D botpose_mt2 = result.getBotpose_MT2();
         if (botpose_mt2 == null) {
             throw new MT2FailedException("Limelight failed to calculate botpose_mt2!");
@@ -54,7 +53,8 @@ public class Limelighter {
 
         if (rawX == 0.0 && rawY == 0.0) {
             throw new MT2ZeroedPosException(
-                    "Limelight botpose_mt2 position is zeroed, the limelight wasn't confident in its calculation and returned 0.0 for both X and Y."
+                    "Limelight botpose_mt2 position is zeroed, the limelight wasn't confident in " +
+                            "its calculation and returned 0.0 for both X and Y."
             );
         }
 
@@ -96,14 +96,12 @@ public class Limelighter {
         return limelight.getLatestResult();
     }
 
-    public Pose2d getRobotPoseFromAprilTag(double yaw) throws NoAprilTagException, MT2FailedException, MT2ZeroedPosException {
+    public Pose2d getRobotPoseFromAprilTag(double yaw)
+            throws NoAprilTagException, MT2FailedException, MT2ZeroedPosException {
         limelight.start();
         switchPipeline(Pipelines.APRILTAGGER);
 
         try {
-//            MecanumDrive drive = hardwareMap.get(MecanumDrive.class, "drive");
-//            double robotYaw = drive.lazyImu.get().getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-
             // give limelight the yaw so it can do its thing
             limelight.updateRobotOrientation(Math.toDegrees(yaw));
 
@@ -121,7 +119,8 @@ public class Limelighter {
         }
     }
 
-    public Pose2d getRobotVectorFromAprilTag(double yaw) throws NoAprilTagException, MT2FailedException, MT2ZeroedPosException {
+    public Pose2d getRobotVectorFromAprilTag(double yaw)
+            throws NoAprilTagException, MT2FailedException, MT2ZeroedPosException {
         // first get a fiducial result
         LLResult result = getLatestResult();
         if (result == null || !result.isValid() || result.getFiducialResults().isEmpty()) {
@@ -133,7 +132,8 @@ public class Limelighter {
         Pose2d calculatedPose = getPose2d(result, yaw);
         Pose3D tagPose3D = tagPositions.get(tagID);
         if (tagPose3D == null) {
-            throw new NoAprilTagException("Detected AprilTag ID " + tagID + " does not have a known position!");
+            throw new NoAprilTagException("Detected AprilTag ID " + tagID + " does not have a " +
+                    "known position!");
         }
         Pose2d tagPose2D = new Pose2d(
                 new Vector2d(tagPose3D.getPosition().x, tagPose3D.getPosition().y),
@@ -150,13 +150,16 @@ public class Limelighter {
         );
     }
 
-    public double getRobotDistanceFromAprilTag(double yaw) throws NoAprilTagException, MT2FailedException, MT2ZeroedPosException {
+    public double getRobotDistanceFromAprilTag(double yaw)
+            throws NoAprilTagException, MT2FailedException, MT2ZeroedPosException {
         Pose2d vectorToTag = getRobotVectorFromAprilTag(yaw);
         return Math.hypot(vectorToTag.position.x, vectorToTag.position.y);
     }
 
     public enum Pipelines {
-        APRILTAGGER(0), PURPLER(1), GREENER(2);
+        APRILTAGGER(0),
+        PURPLER(1),
+        GREENER(2);
 
         private final int value;
 
