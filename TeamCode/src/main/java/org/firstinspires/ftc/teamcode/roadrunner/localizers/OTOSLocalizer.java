@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.roadrunnerDefaults.localizers;
+package org.firstinspires.ftc.teamcode.roadrunner.localizers;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.roadrunnerDefaults.Localizer;
+import org.firstinspires.ftc.teamcode.roadrunner.Localizer;
 
 @Config
 public class OTOSLocalizer implements Localizer {
