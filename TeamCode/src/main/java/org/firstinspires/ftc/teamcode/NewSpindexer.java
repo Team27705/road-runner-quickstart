@@ -286,8 +286,9 @@ public class NewSpindexer {
         if (!canSpin()) return;
         if (spindexerMode.equals(SpindexerMode.Outtake)) {
             if (readyToShoot()) {
-
+                shootSequenceState = ShootSequenceState.ChangeChamber;
             }
+            AutoShootingSequenceAuton();
         }
         else if (spindexerMode.equals(SpindexerMode.Intake) && !isFull()) {
             colorSensor.update(); //call colorSensor.update() to
@@ -335,7 +336,7 @@ public class NewSpindexer {
     }
 
     private boolean readyToShoot() {
-
+        return true;
     }
 
     public class ColorSensor {
