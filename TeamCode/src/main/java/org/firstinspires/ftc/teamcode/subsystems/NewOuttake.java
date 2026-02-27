@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.hardwares.Flywheel;
@@ -29,6 +30,7 @@ public class NewOuttake {
     private final double kV = 0.000357142857;
     private double kS; //kv should be 1 / maxVelocity from encoder, create a short op mod for that
     private final Servo hoodServo;
+    private final VoltageSensor voltage;
     private final InterpLUT lut;
 
 
@@ -48,6 +50,7 @@ public class NewOuttake {
     public NewOuttake(HardwareMap hardwareMap) {
         DcMotorEx flywheelMotorTop = hardwareMap.get(DcMotorEx.class, "FlywheelTop");
         DcMotorEx flywheelMotorBottom = hardwareMap.get(DcMotorEx.class, "FlywheelBot");
+        voltage = hardwareMap.get(VoltageSensor.class, "Control Hub");
         flywheel = new Flywheel(flywheelMotorTop, flywheelMotorBottom);
 
 //        flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -61,22 +64,23 @@ public class NewOuttake {
         lut.createLUT();
 
     }
-
+    //https://github.com/first-tech-challenge/FtcRobotController/blob/master/FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptMotorBulkRead.java
     public void updatePID() {
         currentVelocity = flywheel.getVelocity(); // max vel in ticks per second should be 2800
 
         double error = currentTargetVelocity - currentVelocity;
         double feedback = error * kP;
-        double feedforward = kV ;
+        double feedforward = kV * currentTargetVelocity + kS;
         double pidOutput = Math.max(-1.0, Math.min(1,feedback + feedforward));
         //prob want to implement some deadzone check for error and break out of updatePID while returning
-        flywheel.setPower(feedback + feedforward);
+        flywheel.setPower( (feedback + feedforward) * 12/voltage.getVoltage());
+
     }
 
     //https://docs.ftclib.org/ftclib/features/util#what-is-a-look-up-table
     //no need to use this in auto, just do 1 pos, only use for teleop
     //check if shooting mode active in teleop loop then run limelight, autoUpdateTargetVel and feed limelight pos
-    //get vectorDistance from limelight
+    //get vectorDistance from limelight instead of from odo pods
     public void autoUpdateTargetVel(double distance) {
         currentTargetVelocity = lut.get(distance);
     }
@@ -127,7 +131,7 @@ public class NewOuttake {
         //So it should be a really small number below like 0.05 or something.
         //You should increase it until it begins to move and then decrease it until it stops moving again.
         //
-        // kV is the next number you tune. Pick a velocity like 1500 or something and then increase kV until it gets there.
+        // kV is the next number you tune. Pick a velocity like 1500 or something and then increase kV until velocity gets there without going past target.
         //Tune P. Send a ball through the launcher and increase P until it doesn't overshoot past the target velocity in the recovery phase.
         // Keep increasing though because unless you see overshoot you're fine.
         //Tune I. After all the other numbers are tuned, save them, and then make kS slightly negative.
@@ -138,6 +142,7 @@ public class NewOuttake {
         public void init() {
             DcMotorEx flywheelMotorTop = hardwareMap.get(DcMotorEx.class, "FlywheelTop");
             DcMotorEx flywheelMotorBottom = hardwareMap.get(DcMotorEx.class, "FlywheelBot");
+
             flywheel = new Flywheel(flywheelMotorTop, flywheelMotorBottom);
         }
 
