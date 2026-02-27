@@ -20,8 +20,8 @@ PinpointLocalizer implements Localizer {
     public static class Params {
 
         //note I flipped the odometry pods on the robot so x is now y and y is now x
-        public double parYTicks = -3995.6810984724534; // y position of the parallel encoder (in tick units)
-        public double perpXTicks = 764.0862915219022; // x position of the perpendicular encoder (in tick units)
+        public double parYTicks = -3995.6810984724534; // y position of the parallel encoder (in tick units) //may have to be reversed
+        public double perpXTicks = 764.0862915219022; // x position of the perpendicular encoder (in tick units) //may have to be reversed
         //try to manually calculate these
     }
 
@@ -41,14 +41,14 @@ PinpointLocalizer implements Localizer {
 
         double mmPerTick = inPerTick * 25.4;
         driver.setEncoderResolution(1 / mmPerTick, DistanceUnit.MM);
-        driver.setOffsets(222.25, 0, DistanceUnit.MM);
+        driver.setOffsets(-222.25, 0, DistanceUnit.MM); //-222.25 for x?
         driver.resetPosAndIMU();
         driver.recalibrateIMU();
 
 
         // TODO: reverse encoder directions if needed
-        initialParDirection = GoBildaPinpointDriver.EncoderDirection.FORWARD; //y
-        initialPerpDirection = GoBildaPinpointDriver.EncoderDirection.REVERSED; //x
+        initialParDirection = GoBildaPinpointDriver.EncoderDirection.REVERSED; //y reverse
+        initialPerpDirection = GoBildaPinpointDriver.EncoderDirection.FORWARD; //x forward
 
         driver.setEncoderDirections(initialParDirection, initialPerpDirection);
 

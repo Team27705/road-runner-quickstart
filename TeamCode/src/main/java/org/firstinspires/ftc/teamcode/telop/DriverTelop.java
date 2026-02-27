@@ -50,12 +50,12 @@ public class DriverTelop extends LinearOpMode {
         runTime = new ElapsedTime();
 
         waitForStart();
-
-        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
-
-        for (LynxModule hub : allHubs) {
-            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
-        }
+//
+//        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
+//
+//        for (LynxModule hub : allHubs) {
+//            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+//        }
 
         while (opModeIsActive()) {
             //create an action scheduler here and then add actions from detecting userInputs

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.auto;
 
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
@@ -121,7 +122,7 @@ public class StartRedTop extends LinearOpMode {
                 case -1:
                     break;
                 case 0:
-                    Action.run
+//                    Actions.runBlocking( new InstantAction(tra));
                     break;
             }
         }
