@@ -1,7 +1,12 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
+
 import android.annotation.SuppressLint;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
@@ -11,6 +16,7 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -19,6 +25,7 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.hardwares.Flywheel;
 
+import java.util.Collections;
 import java.util.List;
 
 
@@ -49,10 +56,17 @@ public class NewOuttake {
     //(kP * (targetVelocity - left.getVelocity()) + kV * targetVelocity) * 12 / volts; volts is optional, voltage sensor
     //
 
+    private static List<LynxModule> allHubs = Collections.emptyList();
+    public static void clearBulkCache() {
+        for (LynxModule hub : allHubs) {
+            hub.clearBulkCache();
+        }
+    }
+
 
     public NewOuttake(HardwareMap hardwareMap) {
-        DcMotorEx flywheelMotorTop = hardwareMap.get(DcMotorEx.class, "FlywheelTop");
-        DcMotorEx flywheelMotorBottom = hardwareMap.get(DcMotorEx.class, "FlywheelBot");
+        DcMotorEx flywheelMotorTop = hardwareMap.get(DcMotorEx.class, "flywheelMotor1");
+        DcMotorEx flywheelMotorBottom = hardwareMap.get(DcMotorEx.class, "flywheelMotor2");
         voltage = hardwareMap.get(VoltageSensor.class, "Control Hub");
         flywheel = new Flywheel(flywheelMotorTop, flywheelMotorBottom);
 
@@ -66,9 +80,13 @@ public class NewOuttake {
 //        lut.add(); //1st distance, second target velocity
         lut.createLUT();
 
+        allHubs = hardwareMap.getAll(LynxModule.class);
+
     }
     //https://github.com/first-tech-challenge/FtcRobotController/blob/master/FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptMotorBulkRead.java
     public void updatePID() {
+        clearBulkCache();
+
         currentVelocity = flywheel.getVelocity(); // max vel in ticks per second should be 2800
 
         double error = currentTargetVelocity - currentVelocity;
@@ -121,13 +139,16 @@ public class NewOuttake {
     //https://youtu.be/aPNCpZzCTKg?t=786
     @TeleOp(name = "FlyWheel Tuner", group = "test")
     public static class FlyWheelTuner extends OpMode {
-        public static double targetVelocity, velocity;
-        public static double P, V, S; //do not need kI or kD , find starting numbers
+        @Config
+        public static class flywheeltunerconstants {
+            public static double targetVelocity;
+            public static double P, V, S; //do not need kI or kD , find starting number
+        }
+        public static double velocity;
         private Flywheel flywheel;
         private VoltageSensor vs;
 
         @Override
-
 
         // TODO: ETHAN READ THIS -> Here's how you tune it IN THE CORRECT ORDER
         //
@@ -144,32 +165,37 @@ public class NewOuttake {
         //
 
         public void init() {
-            DcMotorEx flywheelMotorTop = hardwareMap.get(DcMotorEx.class, "FlywheelTop");
-            DcMotorEx flywheelMotorBottom = hardwareMap.get(DcMotorEx.class, "FlywheelBot");
+            DcMotorEx flywheelMotorTop = hardwareMap.get(DcMotorEx.class, "flywheelMotor1");
+            DcMotorEx flywheelMotorBottom = hardwareMap.get(DcMotorEx.class, "flywheelMotor2");
+
+            flywheelMotorTop.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            flywheelMotorBottom.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
             vs = hardwareMap.get(VoltageSensor.class, "Control Hub");
 
             flywheel = new Flywheel(flywheelMotorTop, flywheelMotorBottom);
+            telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-            List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
-
-            for (LynxModule hub : allHubs) {
-                hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
-            }
+//            for (LynxModule hub : allHubs) {
+//                hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+//            }
+//            clearBulkCache();
         }
 
         @Override
         public void loop() {
-            //test with
-
-
+//            clearBulkCache();
             velocity = flywheel.getVelocity();
-            telemetry.addData("TargetVel", targetVelocity);
-            telemetry.addData("CurrentVel", velocity);
-            double error = targetVelocity - velocity;
-            double feedback = error * P;
-            double feedforward = V * targetVelocity + S;
-            flywheel.setPower(feedback + feedforward);
+            double volts = vs.getVoltage();
+
+            telemetry.addData("TargetVel: ", flywheeltunerconstants.targetVelocity);
+            telemetry.addData("CurrentVel: ", velocity);
+            double error = flywheeltunerconstants.targetVelocity - velocity;
+            double feedback = error * flywheeltunerconstants.P;
+            double feedforward = flywheeltunerconstants.V * flywheeltunerconstants.targetVelocity + flywheeltunerconstants.S;
+            flywheel.setPower((feedback + feedforward) );
+            telemetry.addData("power: ", (feedback + feedforward));
+            telemetry.addData("Voltage: ", volts);
         }
     }
 

@@ -28,7 +28,7 @@ public class DriverTelop extends LinearOpMode {
     private Spindexer spindexer;
     private Pose2d intialPosition;
 
-    private Telemetry telemetry;
+//    private Telemetry telemetry;
 
     private List<Action> runningActions = new ArrayList<>();
 
@@ -50,16 +50,16 @@ public class DriverTelop extends LinearOpMode {
         runTime = new ElapsedTime();
 
         waitForStart();
-//
-//        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
-//
-//        for (LynxModule hub : allHubs) {
-//            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
-//        }
+
+        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
+
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        }
 
         while (opModeIsActive()) {
             //create an action scheduler here and then add actions from detecting userInputs
-
+            runTime.reset();
             controllerBehaviorA();
             controllerBehaviorB();
 
@@ -70,7 +70,8 @@ public class DriverTelop extends LinearOpMode {
 //            }
 //            runningActions = newActions;
             telemetry.addData("Loop Time: ", runTime.milliseconds());
-            runTime.reset();
+            telemetry.update();
+
         }
 
     }
