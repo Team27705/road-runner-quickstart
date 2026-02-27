@@ -7,6 +7,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.arcrobotics.ftclib.util.InterpLUT;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -17,6 +18,8 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.hardwares.Flywheel;
+
+import java.util.List;
 
 
 public class NewOuttake {
@@ -121,6 +124,7 @@ public class NewOuttake {
         public static double targetVelocity, velocity;
         public static double P, V, S; //do not need kI or kD , find starting numbers
         private Flywheel flywheel;
+        private VoltageSensor vs;
 
         @Override
 
@@ -143,11 +147,22 @@ public class NewOuttake {
             DcMotorEx flywheelMotorTop = hardwareMap.get(DcMotorEx.class, "FlywheelTop");
             DcMotorEx flywheelMotorBottom = hardwareMap.get(DcMotorEx.class, "FlywheelBot");
 
+            vs = hardwareMap.get(VoltageSensor.class, "Control Hub");
+
             flywheel = new Flywheel(flywheelMotorTop, flywheelMotorBottom);
+
+            List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
+
+            for (LynxModule hub : allHubs) {
+                hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+            }
         }
 
         @Override
         public void loop() {
+            //test with
+
+
             velocity = flywheel.getVelocity();
             telemetry.addData("TargetVel", targetVelocity);
             telemetry.addData("CurrentVel", velocity);

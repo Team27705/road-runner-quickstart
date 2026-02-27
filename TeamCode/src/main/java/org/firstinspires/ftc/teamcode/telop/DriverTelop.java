@@ -4,8 +4,10 @@ package org.firstinspires.ftc.teamcode.telop;
 
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
@@ -30,6 +32,8 @@ public class DriverTelop extends LinearOpMode {
 
     private List<Action> runningActions = new ArrayList<>();
 
+    private ElapsedTime runTime;
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -42,11 +46,19 @@ public class DriverTelop extends LinearOpMode {
         outtake = new Outtake(this.hardwareMap);
         spindexer = new Spindexer(this.hardwareMap, false);
 
+
+        runTime = new ElapsedTime();
+
         waitForStart();
+
+        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
+
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        }
+
         while (opModeIsActive()) {
             //create an action scheduler here and then add actions from detecting userInputs
-
-
 
             controllerBehaviorA();
             controllerBehaviorB();
@@ -57,9 +69,9 @@ public class DriverTelop extends LinearOpMode {
 //
 //            }
 //            runningActions = newActions;
+            telemetry.addData("Loop Time: ", runTime.milliseconds());
+            runTime.reset();
         }
-
-
 
     }
 
