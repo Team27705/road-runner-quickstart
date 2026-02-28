@@ -32,6 +32,7 @@ public class Bootkicker {
      */
     public void initialize() {
         bootkicker.setPosition(BOOTKICKER_POS_DOWN);
+        bootkicker.setPosition(BOOTKICKER_POS_DOWN);
         kickerState = KickerState.Ready;
     }
 
