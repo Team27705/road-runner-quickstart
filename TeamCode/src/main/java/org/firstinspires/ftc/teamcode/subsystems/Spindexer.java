@@ -13,6 +13,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.subsystems.hardwares.RTPTorctex;
 
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class Spindexer {
     //include spindexer servo, light, booktkicker, and color sensor
@@ -22,6 +24,8 @@ public class Spindexer {
     private static final int TIME_TO_DETECT = 25; //millis TODO: Increase delay and test
     private static final int BOOTKICKER_DELAY = 400; //millis
     public static String[] motif = new String[]{"G", "P", "P"};
+    private static boolean isInitalized;
+
     public String x;
     public String posState;
 
@@ -35,7 +39,6 @@ public class Spindexer {
     private final int[] intakePositions = {10, 130, 250}; //index 0 is the degree to send slot 1 to outtake, etc
     // Bot Variables
     private String[] inventory = {"E", "E", "E"}; //E = empty, P = purple, G = green
-    private boolean isInitialized;
 
     // State Variables
     private boolean canSpin;
@@ -75,7 +78,7 @@ public class Spindexer {
         }
 
         bootKickerTimer = new ElapsedTime();
-        isInitialized = false;
+        isInitalized = false;
     }
 
     //https://github.com/NgDodo/FTC12209new/blob/master/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Subsystems/Sorter.java#L17
@@ -85,7 +88,7 @@ public class Spindexer {
     // *//
 
     public void update() {
-        if (!isInitialized) {
+        if (!isInitalized) {
             bootkicker.setPosition(0);
             canSpin = true;
 
@@ -94,7 +97,7 @@ public class Spindexer {
             kickerState = KickerState.Ready;
             sorterState = SorterState.Ready;
 
-            isInitialized = true;
+            isInitalized = true;
 //            currentChamber = 0;
             return;
         }
@@ -133,7 +136,7 @@ public class Spindexer {
      * Overloaded `update()` for teleop use. Note the addition of gamepad as input
      */
     public void update(Gamepad gamepad2) {
-        if (!isInitialized) { //ALWAYS BRING BOOTKICKER DOWN AFTER A RUN ALWAYS!!!!! NEVER LET IT ALIGN ON A WALL
+        if (!isInitalized) { //ALWAYS BRING BOOTKICKER DOWN AFTER A RUN ALWAYS!!!!! NEVER LET IT ALIGN ON A WALL
             bootkicker.setPosition(0);
             canSpin = true;
 
@@ -145,7 +148,7 @@ public class Spindexer {
             sorterState = SorterState.Ready;
 
             currentChamber = 0;
-            isInitialized = true;
+            isInitalized = true;
             return;
         }
 
@@ -373,9 +376,6 @@ public class Spindexer {
     }
 
     public class ColorSensor {
-        public static final int OPACITY_NO_OBJECT = 300000000;
-        public static final int RGB_MIN = 50;
-        public static final int RGB_MAX = 600;
         private final RevColorSensorV3 revColorSensor;
 
         // State
@@ -427,11 +427,11 @@ public class Spindexer {
             g = revColorSensor.green();
             b = revColorSensor.blue();
             opacity = getARGB();
-            if (opacity >= OPACITY_NO_OBJECT) { // higher opacity means no object detected
+            if (opacity >= 300000000) { // higher opacity means no object detected
                 return "E";
-            } else if (g > r && g > b && g > RGB_MIN && g < RGB_MAX) { //sometimes g or b will go to some absurd value in the hundreds
+            } else if (g > r && g > b && g > 50 && g < 600) { //sometimes g or b will go to some absurd value in the hundreds
                 return "G";
-            } else if (b > r && b > g && b > RGB_MIN && b < RGB_MAX) { // for purple check
+            } else if (b > r && b > g && b > 50 && b < 600) { // for purple check
                 return "P";
             } else return "E";
         }
