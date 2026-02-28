@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.subsystems.hardwares.limelight;
+package org.firstinspires.ftc.teamcode.subsystems.hardwares.tests;
 
 
 import com.qualcomm.hardware.limelightvision.LLResult;
@@ -18,7 +18,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import org.firstinspires.ftc.teamcode.roadrunner.Drawing;
 
-@Autonomous(name = "Very Sour Lime + Blinding Light", group = "limelight")
+@Autonomous(name = "Very Sour Lime + Blinding Light", group = "Testing")
 public class VerySourLimeBlindingLight extends LinearOpMode {
     private static final double METERS_TO_INCHES = 39.3700787;
     // Toggle these if your axes are flipped or swapped.

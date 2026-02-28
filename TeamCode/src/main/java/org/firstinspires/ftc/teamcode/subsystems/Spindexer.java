@@ -522,7 +522,7 @@ public class Spindexer {
         KickArtifact
     }
 
-    @TeleOp(name = "Test Spindexer", group = "test")
+    @TeleOp(name = "Test Spindexer", group = "Testing")
     public static class ColorSensorTest extends LinearOpMode {
 
         @Override

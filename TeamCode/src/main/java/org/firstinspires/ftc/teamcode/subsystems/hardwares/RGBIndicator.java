@@ -93,7 +93,7 @@ public class RGBIndicator {
     }
 
     @SuppressWarnings("unused")
-    @TeleOp(name = "Test RGB Indicator - Color Sweep", group = "testing")
+    @TeleOp(name = "Test RGB Indicator - Color Sweep", group = "Testing")
     public static class ColorSweepOpMode extends LinearOpMode {
         @Override
         public void runOpMode() throws InterruptedException {

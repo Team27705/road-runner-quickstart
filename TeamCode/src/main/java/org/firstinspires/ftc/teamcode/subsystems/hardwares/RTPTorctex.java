@@ -364,7 +364,7 @@ public class RTPTorctex {
     }
 
     // TeleOp test class for manual tuning and testing
-    @TeleOp(name = "Torctex PID Test", group = "test")
+    @TeleOp(name = "Torctex PID Test", group = "Testing")
     public static class CRTorctexTest extends LinearOpMode {
         //label each slot 1 2 and 3 with tape and let 1 be the intake then determine the angles to change each slot from intake to outake
         @Override
