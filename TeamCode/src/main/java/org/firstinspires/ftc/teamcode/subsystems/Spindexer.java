@@ -19,7 +19,6 @@ public class Spindexer {
     //note:deprecate Spindexer.java once done
 
     // Static constants
-    private static final int TIME_TO_DETECT = 25; //millis TODO: Increase delay and test
     private static final int BOOTKICKER_DELAY = 400; //millis
     public static String[] motif = new String[]{"G", "P", "P"};
     public String x;
@@ -34,17 +33,17 @@ public class Spindexer {
     private final int[] outTakePositions = {190, 310, 70}; //index 0 is the degree to send slot 1 to intake, etc
     private final int[] intakePositions = {10, 130, 250}; //index 0 is the degree to send slot 1 to outtake, etc
     // Bot Variables
-    private String[] inventory = {"E", "E", "E"}; //E = empty, P = purple, G = green
+    public String[] inventory = {"E", "E", "E"}; //E = empty, P = purple, G = green
     private boolean isInitialized;
 
-    // State Variables
+    // State Variable
     private boolean canSpin;
     private boolean bootkickerCalled;
     private SpindexerMode spindexerMode;
     private SorterState sorterState;
     private KickerState kickerState;
     private ShootSequenceState shootSequenceState;
-    private int currentChamber;
+    public int currentChamber;
     private int teleopMotif;
     private final ElapsedTime bootKickerTimer;
     private int currentTargetMotifNum = 0;
@@ -60,7 +59,7 @@ public class Spindexer {
         AnalogInput analogEncoder = hardwareMap.get(AnalogInput.class, "Spindexer Encoder");
         sorter = new RTPTorctex(crServo, analogEncoder);
         RevColorSensorV3 revColorSensor = hardwareMap.get(RevColorSensorV3.class, "colorSensor");
-        colorSensor = new ColorSensor(revColorSensor);
+        colorSensor = new ColorSensor(revColorSensor, this);
 
         bootkicker = hardwareMap.get(Servo.class, "bootkicker");
         bootkicker.setDirection(Servo.Direction.REVERSE);
@@ -378,9 +377,11 @@ public class Spindexer {
 
     public class ColorSensor {
         public static final int OPACITY_NO_OBJECT = 300000000;
+        private static final int TIME_TO_DETECT = 25; //millis TODO: Increase delay and test
         public static final int RGB_MIN = 50;
         public static final int RGB_MAX = 600;
         private final RevColorSensorV3 revColorSensor;
+        private final Spindexer spin;
 
         // State
         private boolean colorFound;
@@ -389,18 +390,21 @@ public class Spindexer {
         public boolean artifactDetected;
 
 
-        public ColorSensor(RevColorSensorV3 revColorSensor) {
+        public ColorSensor(RevColorSensorV3 revColorSensor, Spindexer spindexer) {
             this.revColorSensor = revColorSensor;
+            this.spin = spindexer;
             colorSensorTimer = new ElapsedTime();
         }
 
-        public void update() {
+        public void update(int currentChamber, String[] inventory) {
 //         NormalizedRGBA colors = colorSensor.getNormalizedColors();
 //         RGB = new double[] {colors.red, colors.green, colors.blue};
+
             String colorDetected = detectArtifactColor();
 
             if (colorDetected.equals("E")) {
                 colorFound = false;
+                artifactDetected = false;
                 return;
             }
 
@@ -411,8 +415,8 @@ public class Spindexer {
             }
 
             if (colorSensorTimer.milliseconds() - colorStartTime >= TIME_TO_DETECT) {
-                if (inventory[currentChamber].equals("E")) {
-                    inventory[currentChamber] = colorDetected;
+                if (spin.inventory[spin.currentChamber].equals("E")) {
+                    spin.inventory[spin.currentChamber] = colorDetected;
                     artifactDetected = true;
                 }
                 colorStartTime = 0;
