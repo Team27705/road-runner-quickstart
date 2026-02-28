@@ -13,6 +13,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.subsystems.hardwares.RTPTorctex;
 
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class Spindexer {
     //include spindexer servo, light, booktkicker, and color sensor
@@ -31,6 +33,10 @@ public class Spindexer {
     private final RTPTorctex sorter;
     private final Servo bootkicker;
     private final ColorSensor colorSensor;
+
+    // Constants
+    private final int[] outTakePositions = {190, 310, 70}; //index 0 is the degree to send slot 1 to intake, etc
+    private final int[] intakePositions = {10, 130, 250}; //index 0 is the degree to send slot 1 to outtake, etc
     // Bot Variables
     private String[] inventory = {"E", "E", "E"}; //E = empty, P = purple, G = green
 
@@ -41,22 +47,17 @@ public class Spindexer {
     private SorterState sorterState;
     private KickerState kickerState;
     private ShootSequenceState shootSequenceState;
-    private final int[] outTakePositions = {190, 310, 70}; //index 0 is the degree to send slot 1 to intake, etc
-    private final int[] intakePositions = {10, 130, 250}; //index 0 is the degree to send slot 1 to outtake, etc
     private int currentChamber;
     private int teleopMotif;
     private boolean colorFound;
     private double colorStartTime;
     private final ElapsedTime bootKickerTimer;
-    private final ElapsedTime sorterTimer;
     private final ElapsedTime colorSensorTimer;
-    private final ElapsedTime shootSequenceTimer;
 
     private int currentTargetMotifNum = 0;
     public String flagActive;
 
     private int r, g, b, opacity;
-    private boolean autonShootingSequenceFlag;
 
 
     //https://gm0.org/en/latest/docs/software/concepts/finite-state-machines.html
@@ -82,9 +83,7 @@ public class Spindexer {
         }
 
         bootKickerTimer = new ElapsedTime();
-        sorterTimer = new ElapsedTime();
         colorSensorTimer = new ElapsedTime();
-        shootSequenceTimer = new ElapsedTime();
         isInitalized = false;
     }
 
