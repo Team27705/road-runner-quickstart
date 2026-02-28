@@ -42,7 +42,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta;
 import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
 import org.firstinspires.ftc.teamcode.roadrunner.localizers.OTOSLocalizer;
-import org.firstinspires.ftc.teamcode.subsystems.hardware.PinpointLocalizer;
+import org.firstinspires.ftc.teamcode.subsystems.hardwares.PinpointLocalizer;
 import org.firstinspires.ftc.teamcode.roadrunner.localizers.TankDrive;
 import org.firstinspires.ftc.teamcode.roadrunner.localizers.ThreeDeadWheelLocalizer;
 import org.firstinspires.ftc.teamcode.roadrunner.localizers.TwoDeadWheelLocalizer;

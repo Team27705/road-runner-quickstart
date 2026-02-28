@@ -47,7 +47,7 @@ import org.firstinspires.ftc.teamcode.roadrunner.messages.DriveCommandMessage;
 import org.firstinspires.ftc.teamcode.roadrunner.messages.MecanumCommandMessage;
 import org.firstinspires.ftc.teamcode.roadrunner.messages.MecanumLocalizerInputsMessage;
 import org.firstinspires.ftc.teamcode.roadrunner.messages.PoseMessage;
-import org.firstinspires.ftc.teamcode.subsystems.hardware.PinpointLocalizer;
+import org.firstinspires.ftc.teamcode.subsystems.hardwares.PinpointLocalizer;
 
 import java.lang.Math;
 import java.util.Arrays;

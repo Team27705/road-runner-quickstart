@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.subsystems.tests;
+package org.firstinspires.ftc.teamcode.subsystems.hardwares.tests;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.roadrunner.Drawing;
-import org.firstinspires.ftc.teamcode.subsystems.hardware.Limelighter;
+import org.firstinspires.ftc.teamcode.subsystems.hardwares.Limelighter;
 
 @Autonomous(name = "Limelight.java Test", group = "Testing")
 public class LimelightDotJavaTest extends LinearOpMode {

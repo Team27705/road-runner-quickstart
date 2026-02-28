@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.subsystems.hardware;
+package org.firstinspires.ftc.teamcode.subsystems.hardwares;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
