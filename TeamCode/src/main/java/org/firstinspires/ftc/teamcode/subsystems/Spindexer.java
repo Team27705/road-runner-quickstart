@@ -147,10 +147,6 @@ public class Spindexer {
             sorter.setPower(0);
         }
 
-        if (colorSensor.artifactDetected) {
-            sorterState = SorterState.SpinToEmptyChamber;
-        }
-
         if (gamepad2.aWasReleased()) { // choose motif from button presses, have this add to telem, prob deprecate this in final
             switch (teleopMotif) {
                 case 0:
