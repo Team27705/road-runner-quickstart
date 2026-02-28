@@ -41,13 +41,13 @@ PinpointLocalizer implements Localizer {
 
         double mmPerTick = inPerTick * 25.4;
         driver.setEncoderResolution(1 / mmPerTick, DistanceUnit.MM);
-        driver.setOffsets(-222.25, 0, DistanceUnit.MM); //-222.25 for x?
+        driver.setOffsets(0, -222.25, DistanceUnit.MM); //-222.25 for x?
         driver.resetPosAndIMU();
         driver.recalibrateIMU();
 
 
         // TODO: reverse encoder directions if needed
-        initialParDirection = GoBildaPinpointDriver.EncoderDirection.REVERSED; //y reverse
+        initialParDirection = GoBildaPinpointDriver.EncoderDirection.FORWARD; //y reverse
         initialPerpDirection = GoBildaPinpointDriver.EncoderDirection.FORWARD; //x forward
 
         driver.setEncoderDirections(initialParDirection, initialPerpDirection);
