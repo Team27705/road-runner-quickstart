@@ -8,8 +8,8 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.subsystems.hardwares.ColorSensor;
-import org.firstinspires.ftc.teamcode.subsystems.hardwares.RTPTorctex;
+import org.firstinspires.ftc.teamcode.subsystems.hardware.ColorSensor;
+import org.firstinspires.ftc.teamcode.subsystems.hardware.RTPTorctex;
 
 import java.util.Arrays;
 

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.subsystems.hardwares;
+package org.firstinspires.ftc.teamcode.subsystems.hardware;
 
 import android.annotation.SuppressLint;
 

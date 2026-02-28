@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.subsystems.hardwares;
+package org.firstinspires.ftc.teamcode.subsystems.hardware;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;

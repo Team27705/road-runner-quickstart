@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.subsystems.hardwares;
+package org.firstinspires.ftc.teamcode.subsystems.hardware;
 
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.util.ElapsedTime;

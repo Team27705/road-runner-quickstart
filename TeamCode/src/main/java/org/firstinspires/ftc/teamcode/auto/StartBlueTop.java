@@ -4,7 +4,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.subsystems.hardwares.Limelighter;
+import org.firstinspires.ftc.teamcode.subsystems.hardware.Limelighter;
 import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
 
 

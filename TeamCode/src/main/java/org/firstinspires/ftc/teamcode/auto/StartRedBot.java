@@ -5,7 +5,7 @@ import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.subsystems.hardwares.Limelighter;
+import org.firstinspires.ftc.teamcode.subsystems.hardware.Limelighter;
 import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
 
 public class StartRedBot extends LinearOpMode {
