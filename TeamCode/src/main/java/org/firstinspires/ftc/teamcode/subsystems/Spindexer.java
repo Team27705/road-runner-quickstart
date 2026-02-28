@@ -49,13 +49,8 @@ public class Spindexer {
     private ShootSequenceState shootSequenceState;
     private int currentChamber;
     private int teleopMotif;
-    private boolean colorFound;
-    private double colorStartTime;
     private final ElapsedTime bootKickerTimer;
-    private final ElapsedTime colorSensorTimer;
-
     private int currentTargetMotifNum = 0;
-    public String flagActive;
 
     private int r, g, b, opacity;
 
@@ -83,7 +78,6 @@ public class Spindexer {
         }
 
         bootKickerTimer = new ElapsedTime();
-        colorSensorTimer = new ElapsedTime();
         isInitalized = false;
     }
 
@@ -383,8 +377,17 @@ public class Spindexer {
 
     public class ColorSensor {
         private final RevColorSensorV3 revColorSensor;
+
+        // State
+        private boolean colorFound;
+        private final ElapsedTime colorSensorTimer;
+        private double colorStartTime;
+        public boolean artifactDetected;
+
+
         public ColorSensor(RevColorSensorV3 revColorSensor) {
             this.revColorSensor = revColorSensor;
+            colorSensorTimer = new ElapsedTime();
         }
 
         public void update() {
@@ -407,14 +410,14 @@ public class Spindexer {
                 if (inventory[currentChamber].equals("E")) {
                     inventory[currentChamber] = colorDetected;
                     sorterState = SorterState.SpinToEmptyChamber; //if full/last chamber, send to outtake pos 1 beforehand to prevent ball from falling out ?
-                    flagActive = "flaged";
+                    artifactDetected = true;
                 }
                 colorStartTime = 0;
                 colorFound = true;
                 //deactivate colorSensor
             }
             else {
-                flagActive = "Not flaged";
+                artifactDetected = false;
             }
         }
         //TODO: RETUNE COLOR SENSOR
@@ -435,6 +438,10 @@ public class Spindexer {
 
         public int getARGB() {
             return revColorSensor.argb();
+        }
+
+        public boolean isArtifactDetected() {
+            return artifactDetected;
         }
 
         public String log() {
@@ -545,7 +552,7 @@ public class Spindexer {
                 telemetry.addData("x: ", spindexer.x);
                 telemetry.addData("Pos State: ", spindexer.posState);
                 telemetry.addData("Spindexer Power", spindexer.sorter.getPower());
-                telemetry.addLine(spindexer.flagActive);
+                telemetry.addData("Artifact Detected", spindexer.colorSensor.isArtifactDetected());
                 telemetry.addLine(spindexer.printInventory());
                 telemetry.addData("Inventory", Arrays.toString(spindexer.inventory));
                 telemetry.addData("Shoot State", spindexer.shootSequenceState);
