@@ -100,19 +100,19 @@ public class Spindexer {
         }
 
         //only let the Torctex PID update if the kicker is down. May have to forcibly set power in a else {.setPower(0);}
-        if (kickerState.equals(KickerState.Ready)) {
+        if (kickerState == KickerState.Ready) {
             sorter.update();
         }
         else {
             sorter.setPower(0);
         }
 
-        if (spindexerMode.equals(SpindexerMode.AutonWait)) return;
+        if (spindexerMode == SpindexerMode.AutonWait) return;
 
-        if (spindexerMode.equals(SpindexerMode.Outtake)) {
+        if (spindexerMode == SpindexerMode.Outtake) {
             AutoShootingSequenceAuton(); // may have to create a flag in !
         }
-        else if (spindexerMode.equals(SpindexerMode.Intake) ) { //maybe check if flywheel is currently within target deadzone?
+        else if (spindexerMode == SpindexerMode.Intake) { //maybe check if flywheel is currently within target deadzone?
             colorSensor.update();
         }
 
@@ -149,7 +149,7 @@ public class Spindexer {
             return;
         }
 
-        if (kickerState.equals(KickerState.Ready)) {
+        if (kickerState == KickerState.Ready) {
             sorter.update();
         }
         else {
@@ -182,8 +182,8 @@ public class Spindexer {
         }
 
         //check in Intake mode, the spindexer is not changing target or moving, kicker isnt doing anything,
-        if (gamepad2.dpadUpWasReleased() && kickerState.equals(KickerState.Ready)
-                && sorterState.equals(SorterState.Ready) && spindexerMode.equals(SpindexerMode.Intake)) {
+        if (gamepad2.dpadUpWasReleased() && kickerState == KickerState.Ready
+                && sorterState == SorterState.Ready && spindexerMode == SpindexerMode.Intake) {
             //call fsm for servo
             kickerState = KickerState.SendUp;
         }
@@ -288,7 +288,7 @@ public class Spindexer {
     }
 
     public boolean canSpin() {
-        return (!bootkickerCalled && sorterState.equals(SorterState.Ready));
+        return (!bootkickerCalled && sorterState == SorterState.Ready);
     }
 
     public void setSpindexerMode(SpindexerMode mode) {
@@ -306,11 +306,11 @@ public class Spindexer {
     public void handleIndexingMode() {
         if (!canSpin()) return;
 
-        if (spindexerMode.equals(SpindexerMode.Outtake)) {
+        if (spindexerMode == SpindexerMode.Outtake) {
             // Just run the sequence; the mode-switch handles the start state
             AutoShootingSequenceAuton();
         }
-        else if (spindexerMode.equals(SpindexerMode.Intake) && !isFull()) {
+        else if (spindexerMode == SpindexerMode.Intake && !isFull()) {
             colorSensor.update();
         }
     }
@@ -365,7 +365,7 @@ public class Spindexer {
     }
 
     private boolean readyToShoot() {
-        if (kickerState.equals(KickerState.Ready) && sorterState.equals(SorterState.Ready)) {
+        if (kickerState == KickerState.Ready && sorterState == SorterState.Ready) {
             return true;
 
         }
