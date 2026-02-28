@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.subsystems.hardwares.ColorSensor;
 import org.firstinspires.ftc.teamcode.subsystems.hardwares.RTPTorctex;
@@ -17,13 +19,17 @@ public class Spindexer {
     //include spindexer servo, light, booktkicker, and color sensor
     //note:deprecate Spindexer.java once done
 
+    // Static constants
+    private static final double BOOTKICKER_POS_UP = 0.25;
+    private static final double BOOTKICKER_POS_DOWN = 0;
+    private static final int BOOTKICKER_DELAY = 400; //millis
     public String[] motif = new String[]{"G", "P", "P"};
     public String x;
     public String posState;
 
     // Hardware
     private final RTPTorctex sorter;
-    private final Bootkicker bootkicker;
+    private final Servo bootkicker;
     private final ColorSensor colorSensor;
 
     // Constants
@@ -35,11 +41,14 @@ public class Spindexer {
 
     // State Variable
     private boolean canSpin;
+    private boolean bootkickerCalled;
     private SpindexerMode spindexerMode;
     private SorterState sorterState;
+    private KickerState kickerState;
     private ShootSequenceState shootSequenceState;
     public int currentChamber;
     private int teleopMotif;
+    private final ElapsedTime bootKickerTimer;
     private int currentTargetMotifNum = 0;
 
 
@@ -53,7 +62,8 @@ public class Spindexer {
         RevColorSensorV3 revColorSensor = hardwareMap.get(RevColorSensorV3.class, "colorSensor");
         colorSensor = new ColorSensor(revColorSensor, this);
 
-        bootkicker = new Bootkicker(hardwareMap);
+        bootkicker = hardwareMap.get(Servo.class, "bootkicker");
+        bootkicker.setDirection(Servo.Direction.REVERSE);
 
         shootSequenceState = ShootSequenceState.Ready;
         if (auto) {
@@ -64,6 +74,7 @@ public class Spindexer {
             spindexerMode = SpindexerMode.Intake;
         }
 
+        bootKickerTimer = new ElapsedTime();
         isInitialized = false;
     }
 
@@ -75,11 +86,12 @@ public class Spindexer {
 
     public void update() {
         if (!isInitialized) {
-            bootkicker.initialize();
+            bootkicker.setPosition(BOOTKICKER_POS_DOWN);
             canSpin = true;
 
             spindexerMode = SpindexerMode.AutonWait;
 
+            kickerState = KickerState.Ready;
             sorterState = SorterState.Ready;
 
             isInitialized = true;
@@ -92,7 +104,7 @@ public class Spindexer {
         }
 
         //only let the Torctex PID update if the kicker is down. May have to forcibly set power in a else {.setPower(0);}
-        if (bootkicker.isReady()) {
+        if (kickerState == KickerState.Ready) {
             sorter.update();
         }
         else {
@@ -108,7 +120,7 @@ public class Spindexer {
             colorSensor.update();
         }
 
-        bootkicker.update();
+        bootkickerFSM();
         handleIndexingMode();
         sorterFSM();
 
@@ -126,13 +138,14 @@ public class Spindexer {
      */
     public void update(Gamepad gamepad2) {
         if (!isInitialized) { //ALWAYS BRING BOOTKICKER DOWN AFTER A RUN ALWAYS!!!!! NEVER LET IT ALIGN ON A WALL
-            bootkicker.initialize();
+            bootkicker.setPosition(BOOTKICKER_POS_DOWN);
             canSpin = true;
 
             spindexerMode = SpindexerMode.Intake;
             sorter.setTargetRotation(intakePositions[0]);
 
             //FSM states initalization
+            kickerState = KickerState.Ready;
             sorterState = SorterState.Ready;
 
             currentChamber = 0;
@@ -140,7 +153,7 @@ public class Spindexer {
             return;
         }
 
-        if (bootkicker.isReady()) {
+        if (kickerState == KickerState.Ready) {
             sorter.update();
         }
         else {
@@ -173,10 +186,10 @@ public class Spindexer {
         }
 
         //check in Intake mode, the spindexer is not changing target or moving, kicker isnt doing anything,
-        if (gamepad2.dpadUpWasReleased() && bootkicker.isReady()
+        if (gamepad2.dpadUpWasReleased() && kickerState == KickerState.Ready
                 && sorterState == SorterState.Ready && spindexerMode == SpindexerMode.Intake) {
             //call fsm for servo
-            bootkicker.kick();
+            kickerState = KickerState.SendUp;
         }
 
         switch (spindexerMode) {
@@ -188,11 +201,39 @@ public class Spindexer {
                 break;
         }
 
-        bootkicker.update();
+        bootkickerFSM();
         handleIndexingMode();
         sorterFSM();
         //shooting modes
     }
+
+    public void bootkickerFSM() {
+        switch (kickerState) {
+            case Ready:
+                bootkickerCalled = false;
+                break;
+            case SendUp:
+                bootkickerCalled = true;
+                bootkicker.setPosition(BOOTKICKER_POS_UP);
+                kickerState = KickerState.SendDown;
+                bootKickerTimer.reset();
+                break;
+            case SendDown:
+                if (bootKickerTimer.milliseconds() >= BOOTKICKER_DELAY) {
+                    bootkicker.setPosition(0);
+                    kickerState = KickerState.WaitTillDown;
+                    bootKickerTimer.reset();
+                }
+                break;
+            case WaitTillDown:
+                if (bootKickerTimer.milliseconds() >= BOOTKICKER_DELAY) {
+                    kickerState = KickerState.Ready;
+                }
+                break;
+        }
+    }
+
+
 
 
     //Angle Rotations for intake:
@@ -251,7 +292,7 @@ public class Spindexer {
     }
 
     public boolean canSpin() {
-        return (!bootkicker.isCalled() && sorterState == SorterState.Ready);
+        return (!bootkickerCalled && sorterState == SorterState.Ready);
     }
 
     public void setSpindexerMode(SpindexerMode mode) {
@@ -295,7 +336,7 @@ public class Spindexer {
                 break;
 
             case ChangeChamber:
-                if (sorterState == SorterState.Ready && bootkicker.isReady()) {
+                if (sorterState == SorterState.Ready && kickerState == KickerState.Ready) {
                     // Determine target
                     int targetPos = getTargetChamberForMotif();
                     sorter.setTargetRotation(outTakePositions[targetPos]);
@@ -310,7 +351,7 @@ public class Spindexer {
 
             case KickArtifact:
                 if (sorterState == SorterState.Ready) {
-                    bootkicker.kick();
+                    kickerState = KickerState.SendUp;
                     // NOW we mark it as empty, after the sorter arrived and kicker started
                     inventory[currentChamber] = "E";
                     currentTargetMotifNum = (currentTargetMotifNum + 1) % 3;
@@ -320,7 +361,7 @@ public class Spindexer {
                 break;
 
             case WaitForKicker:
-                if (bootkicker.isReady()) {
+                if (kickerState == KickerState.Ready) {
                     shootSequenceState = ShootSequenceState.Ready;
                 }
                 break;
@@ -328,7 +369,11 @@ public class Spindexer {
     }
 
     private boolean readyToShoot() {
-        return bootkicker.isReady() && sorterState == SorterState.Ready;
+        if (kickerState == KickerState.Ready && sorterState == SorterState.Ready) {
+            return true;
+
+        }
+        return false;
     }
 
     public void setMotif(int motifTagNum) { //may not be needed
@@ -390,6 +435,12 @@ public class Spindexer {
         SpinToOuttakeTargetingMotif
     }
 
+    private enum KickerState {
+        Ready,
+        SendUp,
+        SendDown,
+        WaitTillDown
+    }
 
     private enum ShootSequenceState {
         Ready,
