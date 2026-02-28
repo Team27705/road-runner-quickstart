@@ -146,13 +146,7 @@ public class NewOuttake {
         }
         public static double velocity;
         private Flywheel flywheel;
-        private Servo hoodServo;
         private VoltageSensor vs;
-
-        private boolean init;
-
-
-        //hood angles: Low = ,High =
 
         @Override
 
@@ -181,10 +175,7 @@ public class NewOuttake {
 
             flywheel = new Flywheel(flywheelMotorTop, flywheelMotorBottom);
             telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-            hoodServo = hardwareMap.get(Servo.class, "hoodServo");
 
-            hoodServo.setDirection(Servo.Direction.FORWARD);
-            init = false;
 //            for (LynxModule hub : allHubs) {
 //                hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
 //            }
@@ -193,10 +184,6 @@ public class NewOuttake {
 
         @Override
         public void loop() {
-            if (!init) {
-                hoodServo.setPosition(0);
-                init = true;
-            }
 //            clearBulkCache();
             velocity = flywheel.getVelocity();
             double volts = vs.getVoltage();
@@ -206,10 +193,9 @@ public class NewOuttake {
             double error = flywheeltunerconstants.targetVelocity - velocity;
             double feedback = error * flywheeltunerconstants.P;
             double feedforward = flywheeltunerconstants.V * flywheeltunerconstants.targetVelocity + flywheeltunerconstants.S;
-            double pidOutput = Math.max(-1.0, Math.min(1,feedback + feedforward) * (12/volts));
-            flywheel.setPower(pidOutput);
-            telemetry.addData("pidOutput: ", pidOutput);
-            telemetry.addData("Voltage sensor reading: ", volts);
+            flywheel.setPower((feedback + feedforward) );
+            telemetry.addData("power: ", (feedback + feedforward));
+            telemetry.addData("Voltage: ", volts);
         }
     }
 
@@ -238,7 +224,6 @@ public class NewOuttake {
             driveTrain = new MecanumDrive(this.hardwareMap, position);
 
             while(!opModeIsActive()) {
-
                 if(gamepad1.startWasReleased()) {
                     TrajectoryActionBuilder goForwards = driveTrain.actionBuilder(position)
                             .lineToX(position.position.x - 5); // move 5 inches forward, adjust as needed based on testing
@@ -248,7 +233,6 @@ public class NewOuttake {
                     position = new Pose2d(position.position.x - 5, position.position.y, 0);
                     gamepad1.setLedColor(0,1,0, 10000);
                 }
-
                 if(gamepad1.backWasReleased()) {
                     TrajectoryActionBuilder goBackwards = driveTrain.actionBuilder(position)
                             .lineToX(position.position.x + 5); // move 5 inches forward, adjust as needed based on testing
