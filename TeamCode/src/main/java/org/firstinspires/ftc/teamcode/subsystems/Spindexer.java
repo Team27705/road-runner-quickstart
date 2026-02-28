@@ -20,8 +20,6 @@ public class Spindexer {
     //note:deprecate Spindexer.java once done
 
     // Static constants
-    private static final double BOOTKICKER_POS_UP = 0.25;
-    private static final double BOOTKICKER_POS_DOWN = 0;
     private static final int BOOTKICKER_DELAY = 400; //millis
     public static String[] motif = new String[]{"G", "P", "P"};
     public String x;
@@ -86,7 +84,7 @@ public class Spindexer {
 
     public void update() {
         if (!isInitialized) {
-            bootkicker.setPosition(BOOTKICKER_POS_DOWN);
+            bootkicker.setPosition(0);
             canSpin = true;
 
             spindexerMode = SpindexerMode.AutonWait;
@@ -138,7 +136,7 @@ public class Spindexer {
      */
     public void update(Gamepad gamepad2) {
         if (!isInitialized) { //ALWAYS BRING BOOTKICKER DOWN AFTER A RUN ALWAYS!!!!! NEVER LET IT ALIGN ON A WALL
-            bootkicker.setPosition(BOOTKICKER_POS_DOWN);
+            bootkicker.setPosition(0);
             canSpin = true;
 
             spindexerMode = SpindexerMode.Intake;
@@ -214,7 +212,7 @@ public class Spindexer {
                 break;
             case SendUp:
                 bootkickerCalled = true;
-                bootkicker.setPosition(BOOTKICKER_POS_UP);
+                bootkicker.setPosition(0.25);
                 kickerState = KickerState.SendDown;
                 bootKickerTimer.reset();
                 break;
