@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
-
 import android.annotation.SuppressLint;
 
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -31,18 +29,18 @@ import java.util.List;
 
 public class NewOuttake {
 
-    private static double kP, kI, kD; //PID coeffs, set to private after tuning
+    private static double kP = .075, kI, kD; //PID coeffs, set to private after tuning
     private final Flywheel flywheel;
-    private double currentTargetVelocity = 1500;
+    private double currentTargetVelocity = 0;
     private double currentVelocity;
     private boolean readyToShoot;
     //coefficents
-    private final double kV = 0.000357142857;
-    private double kS; //kv should be 1 / maxVelocity from encoder, create a short op mod for that
+    private final double kV = 0.001;
+    private double kS = .415; //kv should be 1 / maxVelocity from encoder, create a short op mod for that
     private final Servo hoodServo;
     private final VoltageSensor voltage;
-    private final InterpLUT lut;
-
+//    private final InterpLUT lut;
+    private boolean initalized;
 
     //notes: 1 PIDFCoefficents for both motors, use the numbers for one for both
     //kS: smallest number to get the motor to spin, overcoming friction
@@ -57,6 +55,8 @@ public class NewOuttake {
     //
 
     private static List<LynxModule> allHubs = Collections.emptyList();
+
+
     public static void clearBulkCache() {
         for (LynxModule hub : allHubs) {
             hub.clearBulkCache();
@@ -76,35 +76,49 @@ public class NewOuttake {
         hoodServo.setDirection(Servo.Direction.REVERSE);
         flywheel.getVelocity();
 
-        lut = new InterpLUT();
-//        lut.add(); //1st distance, second target velocity
-        lut.createLUT();
+//        lut = new InterpLUT();
+////        lut.add(); //1st distance, second target velocity
+//        lut.createLUT();
 
         allHubs = hardwareMap.getAll(LynxModule.class);
-
+        initalized = false;
     }
     //https://github.com/first-tech-challenge/FtcRobotController/blob/master/FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptMotorBulkRead.java
     public void updatePID() {
+
+        if (!initalized) {
+            hoodServo.setPosition(0);
+            initalized = true;
+        }
         clearBulkCache();
 
         currentVelocity = flywheel.getVelocity(); // max vel in ticks per second should be 2800
-
         double error = currentTargetVelocity - currentVelocity;
         double feedback = error * kP;
         double feedforward = kV * currentTargetVelocity + kS;
         double pidOutput = Math.max(-1.0, Math.min(1,feedback + feedforward));
         //prob want to implement some deadzone check for error and break out of updatePID while returning
-        flywheel.setPower( (feedback + feedforward) * 12/voltage.getVoltage());
+        flywheel.setPower( pidOutput);
+    }
 
+    public String atTarget () {
+        if (currentVelocity - currentTargetVelocity + 20 == 0 || currentVelocity - currentTargetVelocity == 0) {
+            return "flywheel ready";
+        }
+        return "Flywheel not ready";
+    }
+
+    public void setTargetVel (int vel) {
+        currentTargetVelocity = vel;
     }
 
     //https://docs.ftclib.org/ftclib/features/util#what-is-a-look-up-table
     //no need to use this in auto, just do 1 pos, only use for teleop
     //check if shooting mode active in teleop loop then run limelight, autoUpdateTargetVel and feed limelight pos
     //get vectorDistance from limelight instead of from odo pods
-    public void autoUpdateTargetVel(double distance) {
-        currentTargetVelocity = lut.get(distance);
-    }
+//    public void autoUpdateTargetVel(double distance) {
+//        currentTargetVelocity = lut.get(distance);
+//    }
 
     //TODO: Implement small InterpLUT for hood
     public void autoUpdateHood(Pose2d vectorDistance) {
@@ -146,7 +160,13 @@ public class NewOuttake {
         }
         public static double velocity;
         private Flywheel flywheel;
+        private Servo hoodServo;
         private VoltageSensor vs;
+
+        private boolean init;
+
+
+        //hood angles: Low = ,High =
 
         @Override
 
@@ -175,7 +195,10 @@ public class NewOuttake {
 
             flywheel = new Flywheel(flywheelMotorTop, flywheelMotorBottom);
             telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+            hoodServo = hardwareMap.get(Servo.class, "hoodServo");
 
+            hoodServo.setDirection(Servo.Direction.FORWARD);
+            init = false;
 //            for (LynxModule hub : allHubs) {
 //                hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
 //            }
@@ -184,6 +207,10 @@ public class NewOuttake {
 
         @Override
         public void loop() {
+            if (!init) {
+                hoodServo.setPosition(0);
+                init = true;
+            }
 //            clearBulkCache();
             velocity = flywheel.getVelocity();
             double volts = vs.getVoltage();
@@ -193,9 +220,10 @@ public class NewOuttake {
             double error = flywheeltunerconstants.targetVelocity - velocity;
             double feedback = error * flywheeltunerconstants.P;
             double feedforward = flywheeltunerconstants.V * flywheeltunerconstants.targetVelocity + flywheeltunerconstants.S;
-            flywheel.setPower((feedback + feedforward) );
-            telemetry.addData("power: ", (feedback + feedforward));
-            telemetry.addData("Voltage: ", volts);
+            double pidOutput = Math.max(-1.0, Math.min(1,feedback + feedforward) * (12/volts));
+            flywheel.setPower(flywheeltunerconstants.S);
+            telemetry.addData("pidOutput: ", pidOutput);
+            telemetry.addData("Voltage sensor reading: ", volts);
         }
     }
 
@@ -224,6 +252,7 @@ public class NewOuttake {
             driveTrain = new MecanumDrive(this.hardwareMap, position);
 
             while(!opModeIsActive()) {
+
                 if(gamepad1.startWasReleased()) {
                     TrajectoryActionBuilder goForwards = driveTrain.actionBuilder(position)
                             .lineToX(position.position.x - 5); // move 5 inches forward, adjust as needed based on testing
@@ -233,6 +262,7 @@ public class NewOuttake {
                     position = new Pose2d(position.position.x - 5, position.position.y, 0);
                     gamepad1.setLedColor(0,1,0, 10000);
                 }
+
                 if(gamepad1.backWasReleased()) {
                     TrajectoryActionBuilder goBackwards = driveTrain.actionBuilder(position)
                             .lineToX(position.position.x + 5); // move 5 inches forward, adjust as needed based on testing

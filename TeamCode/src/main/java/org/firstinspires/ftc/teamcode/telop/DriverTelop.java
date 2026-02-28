@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
+import org.firstinspires.ftc.teamcode.subsystems.NewOuttake;
 import org.firstinspires.ftc.teamcode.subsystems.Spindexer;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
@@ -24,7 +25,7 @@ public class DriverTelop extends LinearOpMode {
 
     private MecanumDrive driveTrain;
     private Intake intake;
-    private Outtake outtake;
+    private NewOuttake outtake;
     private Spindexer spindexer;
     private Pose2d intialPosition;
 
@@ -43,7 +44,7 @@ public class DriverTelop extends LinearOpMode {
 
         driveTrain = new MecanumDrive(this.hardwareMap, intialPosition);
         intake = new Intake(this.hardwareMap);
-        outtake = new Outtake(this.hardwareMap);
+        outtake = new NewOuttake(this.hardwareMap);
         spindexer = new Spindexer(this.hardwareMap, false);
 
 
@@ -62,6 +63,7 @@ public class DriverTelop extends LinearOpMode {
             runTime.reset();
             controllerBehaviorA();
             controllerBehaviorB();
+            outtake.updatePID();
 
 
 //            List<Action> newActions = new ArrayList<>();
@@ -105,16 +107,23 @@ public class DriverTelop extends LinearOpMode {
     }
 
     public void controllerBehaviorB () {
-        spindexer.update(gamepad2);
-        if (gamepad2.yWasReleased()) {
-            outtake.ramp();
+
+        if (gamepad2.dpadUpWasReleased()) { // close shot
+            outtake.setHoodAngle(.7);
+            outtake.setTargetVel(800);
+
         }
-        if (gamepad2.backWasReleased()) {
-            outtake.runOuttakeClose();
+        else if (gamepad2.dpadDownWasReleased()) { //far shot
+            outtake.setHoodAngle(.5);
+            outtake.setTargetVel(950);
         }
-        if (gamepad2.a) {
-            outtake.stop();
+        else if (gamepad2.dpadRightWasReleased()){ //mid shot
+            outtake.setHoodAngle(.25);
+            outtake.setTargetVel(800);
         }
+
+        spindexer.update(gamepad2); //start and x are used
+        telemetry.addLine(outtake.atTarget());
     }
 
     public void updateTelem () {
