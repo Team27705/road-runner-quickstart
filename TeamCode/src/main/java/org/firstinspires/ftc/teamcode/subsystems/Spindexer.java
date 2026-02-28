@@ -23,7 +23,7 @@ public class Spindexer {
     private static final double BOOTKICKER_POS_UP = 0.25;
     private static final double BOOTKICKER_POS_DOWN = 0;
     private static final int BOOTKICKER_DELAY = 400; //millis
-    public String[] motif = new String[]{"G", "P", "P"};
+    public static String[] motif = new String[]{"G", "P", "P"};
     public String x;
     public String posState;
 
