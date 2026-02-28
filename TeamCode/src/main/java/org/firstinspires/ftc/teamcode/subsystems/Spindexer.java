@@ -99,6 +99,10 @@ public class Spindexer {
             return;
         }
 
+        if (colorSensor.artifactDetected) {
+            sorterState = SorterState.SpinToEmptyChamber;
+        }
+
         //only let the Torctex PID update if the kicker is down. May have to forcibly set power in a else {.setPower(0);}
         if (kickerState == KickerState.Ready) {
             sorter.update();
@@ -409,7 +413,6 @@ public class Spindexer {
             if (colorSensorTimer.milliseconds() - colorStartTime >= TIME_TO_DETECT) {
                 if (inventory[currentChamber].equals("E")) {
                     inventory[currentChamber] = colorDetected;
-                    sorterState = SorterState.SpinToEmptyChamber; //if full/last chamber, send to outtake pos 1 beforehand to prevent ball from falling out ?
                     artifactDetected = true;
                 }
                 colorStartTime = 0;
