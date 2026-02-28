@@ -7,7 +7,6 @@ import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.subsystems.hardware.ColorSensor;
 import org.firstinspires.ftc.teamcode.subsystems.hardware.RTPTorctex;
@@ -31,7 +30,7 @@ public class Spindexer {
     private final int[] outTakePositions = {190, 310, 70}; //index 0 is the degree to send slot 1 to intake, etc
     private final int[] intakePositions = {10, 130, 250}; //index 0 is the degree to send slot 1 to outtake, etc
     // Bot Variables
-    public String[] inventory = {"G", "P", "P"}; //E = empty, P = purple, G = green
+    public String[] inventory = {"E", "E", "E"}; //E = empty, P = purple, G = green
     private boolean isInitialized;
 
     // State Variable
@@ -42,7 +41,6 @@ public class Spindexer {
     public int currentChamber;
     private int teleopMotif;
     private int currentTargetMotifNum = 0;
-    private ElapsedTime servoPositionTimer;
 
 
     //https://gm0.org/en/latest/docs/software/concepts/finite-state-machines.html
@@ -58,7 +56,6 @@ public class Spindexer {
         bootkicker = new Bootkicker(hardwareMap);
 
         shootSequenceState = ShootSequenceState.Ready;
-        servoPositionTimer = new ElapsedTime();
         if (auto) {
             inventory = new String[] {"P", "G", "P"}; //Todo: physically label chambers 1, 2, 3
             spindexerMode = SpindexerMode.Outtake;
@@ -90,13 +87,17 @@ public class Spindexer {
             return;
         }
 
-        // Always update the servo position
-        sorter.update();
-
         if (colorSensor.artifactDetected) {
             sorterState = SorterState.SpinToEmptyChamber;
         }
 
+        //only let the Torctex PID update if the kicker is down. May have to forcibly set power in a else {.setPower(0);}
+        if (bootkicker.isReady()) {
+            sorter.update();
+        }
+        else {
+            sorter.setPower(0);
+        }
 
         if (spindexerMode == SpindexerMode.AutonWait) return;
 
@@ -107,9 +108,9 @@ public class Spindexer {
             colorSensor.update();
         }
 
-        sorterFSM();
         bootkicker.update();
         handleIndexingMode();
+        sorterFSM();
 
     }
 
@@ -139,8 +140,12 @@ public class Spindexer {
             return;
         }
 
-        // Always update the servo position
-        sorter.update();
+        if (bootkicker.isReady()) {
+            sorter.update();
+        }
+        else {
+            sorter.setPower(0);
+        }
 
         if (colorSensor.artifactDetected) {
             sorterState = SorterState.SpinToEmptyChamber;
@@ -187,9 +192,9 @@ public class Spindexer {
                 break;
         }
 
-        sorterFSM();
         bootkicker.update();
         handleIndexingMode();
+        sorterFSM();
         //shooting modes
     }
 
@@ -215,21 +220,13 @@ public class Spindexer {
                 }
                 break;
             case SpinToEmptyChamber: //only use for intake
-                boolean foundEmpty = false;
                 for (int i = 0; i < 3; i++) {
                     if (inventory[i].equals("E")) {
                         currentChamber = i;
                         sorter.setTargetRotation(intakePositions[i]);
                         sorterState = SorterState.Spinning;
-                        // Reset artifact detected flag to prevent immediate re-triggering
-                        colorSensor.artifactDetected = false;
-                        foundEmpty = true;
                         break;
                     }
-                }
-                // If no empty chamber found (inventory full), stay in Ready state
-                if (!foundEmpty) {
-                    sorterState = SorterState.Ready;
                 }
                 break;
             case SpinToOuttakeTargetingMotif:
@@ -269,21 +266,18 @@ public class Spindexer {
             this.shootSequenceState = ShootSequenceState.ChangeChamber; // Start immediately
             this.sorterState = SorterState.Ready; // Interrupt any current spin
         } else {
-            // When entering Intake mode, just reset to Ready state
-            // Let color sensor detection trigger the chamber change
-            this.sorterState = SorterState.Ready;
+            this.sorterState = SorterState.SpinToEmptyChamber;
         }
     }
 
     public void handleIndexingMode() {
+        if (!canSpin()) return;
+
         if (spindexerMode == SpindexerMode.Outtake) {
-            // Always run the shoot sequence FSM — it has internal guards to prevent
-            // the sorter from spinning while the bootkicker is still active.
+            // Just run the sequence; the mode-switch handles the start state
             AutoShootingSequenceAuton();
         }
         else if (spindexerMode == SpindexerMode.Intake && !isFull()) {
-            // Only feed new artifacts when the sorter/kicker aren't busy
-            if (!canSpin()) return;
             colorSensor.update();
         }
     }
@@ -291,8 +285,9 @@ public class Spindexer {
     public void AutoShootingSequenceAuton() {
         // Only exit if we are Ready (not in the middle of a shot) AND empty
         if (shootSequenceState == ShootSequenceState.Ready && isEmpty()) {
-            // Don't go back to Intake - just stay idle until next match
-            sorterState = SorterState.Ready;
+            spindexerMode = SpindexerMode.Intake;
+            currentTargetMotifNum = 0;
+            sorterState = SorterState.SpinToEmptyChamber;
             return;
         }
 
@@ -313,18 +308,6 @@ public class Spindexer {
                     currentChamber = targetPos;
 
                     sorterState = SorterState.Spinning; // Set to spinning so we wait for arrival
-                    shootSequenceState = ShootSequenceState.WaitForServoPosition;
-                    servoPositionTimer.reset(); // Start the timeout timer
-                } else if (sorterState != SorterState.Ready) {
-                    // Still spinning to target, stay in ChangeChamber state
-                    shootSequenceState = ShootSequenceState.ChangeChamber;
-                }
-                break;
-
-            case WaitForServoPosition:
-                // Wait for the servo to reach the target position before kicking
-                // Use a larger tolerance (10 degrees) and add timeout (1 second) as fallback
-                if (sorter.isAtTarget(10) && servoPositionTimer.seconds() > 1.0) {
                     shootSequenceState = ShootSequenceState.KickArtifact;
                 }
                 break;
@@ -415,9 +398,8 @@ public class Spindexer {
     private enum ShootSequenceState {
         Ready,
         ChangeChamber,
-        WaitForServoPosition,
-        KickArtifact,
-        WaitForKicker
+        WaitForKicker,
+        KickArtifact
     }
 
     @TeleOp(name = "Test Spindexer", group = "Testing")
