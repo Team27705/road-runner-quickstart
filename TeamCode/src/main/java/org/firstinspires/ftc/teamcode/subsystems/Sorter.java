@@ -33,7 +33,7 @@ public class Sorter {
     //----------------------------------------------------------------------------------------------
     // State
     //----------------------------------------------------------------------------------------------
-    private final int currentChamber = 0;
+    private int currentChamber = 0;
     private SorterMode currentMode = SorterMode.Intake;
     private ChamberState[] inventory = {ChamberState.Empty, ChamberState.Empty, ChamberState.Empty};
 
@@ -139,6 +139,7 @@ public class Sorter {
         if (color == null) {
             throw new IllegalArgumentException("Color cannot be null");
         }
+        inventory[index] = color;
     }
 
     /**
@@ -163,6 +164,7 @@ public class Sorter {
             default:
                 throw new IllegalStateException("Invalid SorterMode: " + currentMode);
         }
+        currentChamber = nextChamber;
         sorter.setTargetRotation(targetRotation);
     }
 
@@ -191,6 +193,7 @@ public class Sorter {
             default:
                 throw new IllegalStateException("Invalid SorterMode: " + currentMode);
         }
+        currentChamber = chamberIndex;
         sorter.setTargetRotation(targetRotation);
     }
 
@@ -221,6 +224,24 @@ public class Sorter {
             throw new NoSuchElementException("No chamber with state " + chamberState);
         }
         goToChamber(chamberIndex);
+    }
+
+    /**
+     * Forces the servo to a specific power output, bypassing the PID controller.
+     * Use {@code 0} to hold the servo in place while another mechanism is active.
+     *
+     * @param power the power to apply (-1.0..1.0)
+     */
+    public void setPower(double power) {
+        sorter.setPower(power);
+    }
+
+    /**
+     * Returns {@code true} when the servo has reached its target rotation
+     * within the default tolerance of 5 degrees.
+     */
+    public boolean isAtTarget() {
+        return sorter.isAtTarget();
     }
 
     /**
