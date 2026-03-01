@@ -4,6 +4,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+/**
+ * Subsystem for a servo that extends to kick a ball into the shooter. The servo should be
+ * configured in the robot configuration with the name "bootkicker".
+ */
 public class Bootkicker {
 
     //----------------------------------------------------------------------------------------------

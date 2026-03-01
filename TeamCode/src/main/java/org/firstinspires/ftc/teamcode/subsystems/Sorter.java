@@ -8,6 +8,11 @@ import org.firstinspires.ftc.teamcode.subsystems.hardwares.RTPTorctex;
 
 import java.util.NoSuchElementException;
 
+/**
+ * The Sorter subsystem manages the servo and inventory for the three-chamber sorter mechanism. It
+ * allows switching between intake and outtake modes, tracking the state of each chamber, and moving
+ * the servo to the appropriate position based on the current mode and desired chamber.
+ */
 public class Sorter {
 
     //----------------------------------------------------------------------------------------------
