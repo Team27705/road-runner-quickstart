@@ -112,7 +112,7 @@ public class DriverTelop extends LinearOpMode {
 
         if (gamepad2.dpadUpWasReleased()) { // close shot
             outtake.setHoodAngle(.25);
-            outtake.setTargetVel(1000);
+            outtake.setTargetVel(740);
 
         }
         else if (gamepad2.dpadDownWasReleased()) { //far shot
@@ -121,7 +121,7 @@ public class DriverTelop extends LinearOpMode {
         }
         else if (gamepad2.dpadRightWasReleased()){ //mid shot
             outtake.setHoodAngle(.5);
-            outtake.setTargetVel(1200);
+            outtake.setTargetVel(1100);
         }
         else if (gamepad2.dpadLeftWasReleased()) {
             outtake.setTargetVel(0);
