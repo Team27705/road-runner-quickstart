@@ -28,14 +28,15 @@ import java.util.List;
 
 public class NewOuttake {
 
-    private static double kP = .075, kI, kD; //PID coeffs, set to private after tuning
+    private static double kP = .1, kI, kD; //PID coeffs, set to private after tuning
     private final Flywheel flywheel;
     private double currentTargetVelocity = 0;
     private double currentVelocity;
     private boolean readyToShoot;
     //coefficents
-    private final double kV = 0.001; //kv should be 1 / maxVelocity from encoder, create a short op mod for that
-    private double kS = .415; //may want to remove ks
+    private final double kV = 0.00045; //kv should be 1 / maxVelocity from encoder, create a short op mod for that
+//    private double kS = .415; //may want to remove ks
+    private double kS = 0.245;
     private final Servo hoodServo;
     private final VoltageSensor voltage;
 //    private final InterpLUT lut;
@@ -214,7 +215,7 @@ public class NewOuttake {
 
             flywheel = new Flywheel(flywheelMotorTop, flywheelMotorBottom);
             telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-            hoodServo = hardwareMap.get(Servo.class, "hoodServo");
+            hoodServo = hardwareMap.get(Servo.class, "Hood Servo");
 
             hoodServo.setDirection(Servo.Direction.REVERSE);
             init = false;
@@ -240,7 +241,7 @@ public class NewOuttake {
             double feedback = error * flywheeltunerconstants.P;
             double feedforward = flywheeltunerconstants.V * flywheeltunerconstants.targetVelocity + flywheeltunerconstants.S;
             double pidOutput = Math.max(-1.0, Math.min(1,feedback + feedforward) * (12/volts));
-            flywheel.setPower(flywheeltunerconstants.S);
+            flywheel.setPower(pidOutput);
             telemetry.addData("pidOutput: ", pidOutput);
             telemetry.addData("Voltage sensor reading: ", volts);
         }

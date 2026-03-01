@@ -35,7 +35,7 @@ public class Spindexer {
     private final ColorSensor colorSensor;
 
     // Constants
-    private final int[] outTakePositions = {190, 310, 70}; //index 0 is the degree to send slot 1 to intake, etc
+    private final int[] outTakePositions = {195, 315, 75}; //index 0 is the degree to send slot 1 to intake, etc
     private final int[] intakePositions = {10, 130, 250}; //index 0 is the degree to send slot 1 to outtake, etc
     // Bot Variables
     private String[] inventory = {"E", "E", "E"}; //E = empty, P = purple, G = green
@@ -219,7 +219,7 @@ public class Spindexer {
                 break;
             case SendUp:
                 bootkickerCalled = true;
-                bootkicker.setPosition(0.25);
+                bootkicker.setPosition(0.35);
                 kickerState = KickerState.SendDown;
                 bootKickerTimer.reset();
                 break;

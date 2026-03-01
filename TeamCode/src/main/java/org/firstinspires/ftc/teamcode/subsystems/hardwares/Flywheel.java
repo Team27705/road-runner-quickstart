@@ -12,8 +12,8 @@ public class Flywheel {
         this.topMotor = topMotor;
         this.botMotor = botMotor;
 
-        this.topMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        this.botMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        this.topMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        this.botMotor.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public void setPower(double power) {
