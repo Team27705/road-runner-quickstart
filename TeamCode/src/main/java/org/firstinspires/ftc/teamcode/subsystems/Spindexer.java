@@ -259,7 +259,7 @@ public class Spindexer {
             case Ready:
                 break;
             case Spinning:
-                if (sorter.isAtTarget()) {
+                if (sorter.isAtTarget() && spindexerTimer.milliseconds() >= 100) {
                     sorterState = SorterState.Ready;
                 }
                 break;
@@ -269,6 +269,7 @@ public class Spindexer {
                         currentChamber = i;
                         sorter.setTargetRotation(intakePositions[i]);
                         sorterState = SorterState.Spinning;
+                        spindexerTimer.reset();
                         break;
                     }
                 }
@@ -279,6 +280,7 @@ public class Spindexer {
                 sorter.setTargetRotation(outTakePositions[targetPos]);
                 inventory[targetPos] = "E";
                 sorterState = SorterState.Spinning;
+                spindexerTimer.reset();
                 break;
         }
     }
