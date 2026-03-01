@@ -156,6 +156,14 @@ public class Limelighter {
         return Math.hypot(vectorToTag.position.x, vectorToTag.position.y);
     }
 
+    public int getLatestAprilTagID() throws NoAprilTagException {
+        LLResult result = getLatestResult();
+        if (result == null || !result.isValid() || result.getFiducialResults().isEmpty()) {
+            throw new NoAprilTagException("No AprilTags detected!");
+        }
+        return result.getFiducialResults().get(0).getFiducialId();
+    }
+
     public enum Pipelines {
         APRILTAGGER(0),
         PURPLER(1),
