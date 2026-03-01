@@ -39,6 +39,9 @@ public class Bootkicker {
 
     /**
      * Call once to trigger a single kick cycle. No-ops if already kicking.
+     * <p>
+     * Note that this method already checks if the kicker is ready, so you don't need to check
+     * isReady() before calling this.
      */
     public void kick() {
         if (state != State.Ready) return;
