@@ -58,19 +58,18 @@ public class DriverTelop extends LinearOpMode {
 
         while (opModeIsActive()) {
             //create an action scheduler here and then add actions from detecting userInputs
-            runTime.reset();
-            controllerBehaviorA();
-
-            outtake.updatePID();
             spindexer.update(gamepad2);
+            controllerBehaviorA();
+            outtake.updatePID();
+
             controllerBehaviorB();
 
-//            List<Action> newActions = new ArrayList<>();
-//            for (Action action: runningActions) {
-//
-//            }
-//            runningActions = newActions;
-            telemetry.addData("Loop Time: ", runTime.milliseconds());
+            List<Action> newActions = new ArrayList<>();
+            for (Action action: runningActions) {
+
+            }
+            runningActions = newActions;
+
             telemetry.update();
 
         }
@@ -126,6 +125,10 @@ public class DriverTelop extends LinearOpMode {
         else if (gamepad2.dpadLeftWasReleased()) {
             outtake.setTargetVel(0);
         }
+//        else if (gamepad2.b) {
+//            spindexer.setPower
+//
+//        }
 
          //start and x are used
         telemetry.addLine(outtake.outtakeLog());

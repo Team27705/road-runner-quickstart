@@ -21,8 +21,8 @@ public class Spindexer {
     //note:deprecate Spindexer.java once done
 
     // Static constants
-    private static final int TIME_TO_DETECT = 150; //millis TODO: Increase delay and test
-    private static final int BOOTKICKER_DELAY = 400; //millis
+    private static final int TIME_TO_DETECT = 250; //millis TODO: Increase delay and test
+    private static final int BOOTKICKER_DELAY = 500; //millis
     public static String[] motif = new String[]{"G", "P", "P"};
     private static boolean isInitalized;
 
@@ -35,7 +35,7 @@ public class Spindexer {
     private final ColorSensor colorSensor;
 
     // Constants
-    private final int[] outTakePositions = {185, 315, 75}; //index 0 is the degree to send slot 1 to intake, etc
+    private final int[] outTakePositions = {190, 310, 70}; //index 0 is the degree to send slot 1 to intake, etc
     private final int[] intakePositions = {10, 130, 250}; //index 0 is the degree to send slot 1 to outtake, etc
     // Bot Variables
     private String[] inventory = {"E", "E", "E"}; //E = empty, P = purple, G = green
@@ -53,6 +53,7 @@ public class Spindexer {
     private double colorStartTime;
     private final ElapsedTime bootKickerTimer;
     private final ElapsedTime colorSensorTimer;
+    private final ElapsedTime spindexerTimer;
 
     private int currentTargetMotifNum = 0;
     public String flagActive;
@@ -84,6 +85,7 @@ public class Spindexer {
 
         bootKickerTimer = new ElapsedTime();
         colorSensorTimer = new ElapsedTime();
+        spindexerTimer = new ElapsedTime();
         isInitalized = false;
     }
 
@@ -350,10 +352,14 @@ public class Spindexer {
                     currentChamber = targetPos;
 
                     sorterState = SorterState.Spinning; // Set to spinning so we wait for arrival
-                    shootSequenceState = ShootSequenceState.KickArtifact;
+                    shootSequenceState = ShootSequenceState.WaitForSpindexer;
+
                 }
                 break;
-
+            case WaitForSpindexer:
+                if (spindexerTimer.milliseconds() >= 1000 && sorterState == SorterState.Ready) {
+                    shootSequenceState = ShootSequenceState.KickArtifact;
+                }
             case KickArtifact:
                 if (sorterState == SorterState.Ready) {
                     kickerState = KickerState.SendUp;
@@ -522,6 +528,7 @@ public class Spindexer {
         Ready,
         ChangeChamber,
         WaitForKicker,
+        WaitForSpindexer,
         KickArtifact
     }
 
