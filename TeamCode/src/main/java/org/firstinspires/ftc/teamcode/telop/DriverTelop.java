@@ -95,10 +95,13 @@ public class DriverTelop extends LinearOpMode {
         driveTrain.driverRelativePower(leftY, leftX , rightX);
 
 
-        if (gamepad1.left_bumper) {
+        if (gamepad1.leftBumperWasReleased()) {
             intake.spinIntake();
         }
-        if (gamepad1.right_bumper) {
+        else if (gamepad1.rightBumperWasReleased()) {
+            intake.reverseIntake();
+        }
+        if (gamepad1.bWasReleased()) {
             intake.idleIntake();
         }
 
@@ -108,17 +111,17 @@ public class DriverTelop extends LinearOpMode {
     public void controllerBehaviorB () {
 
         if (gamepad2.dpadUpWasReleased()) { // close shot
-            outtake.setHoodAngle(.7);
-            outtake.setTargetVel(800);
+            outtake.setHoodAngle(.25);
+            outtake.setTargetVel(600);
 
         }
         else if (gamepad2.dpadDownWasReleased()) { //far shot
-            outtake.setHoodAngle(.5);
-            outtake.setTargetVel(950);
+            outtake.setHoodAngle(.7);
+            outtake.setTargetVel(650);
         }
         else if (gamepad2.dpadRightWasReleased()){ //mid shot
-            outtake.setHoodAngle(.25);
-            outtake.setTargetVel(800);
+            outtake.setHoodAngle(.5);
+            outtake.setTargetVel(700);
         }
         else if (gamepad2.dpadLeftWasReleased()) {
             outtake.setTargetVel(0);
@@ -126,7 +129,10 @@ public class DriverTelop extends LinearOpMode {
 
          //start and x are used
         telemetry.addLine(outtake.outtakeLog());
-        telemetry.addData("motif: ", spindexer.getCurrentMotif());
+
+        String[] motif = spindexer.getCurrentMotif();
+        String motifCaption = motif[0] + ", " +motif[1] + ", " + motif[2];
+        telemetry.addLine(motifCaption);
     }
 
     public void updateTelem () {

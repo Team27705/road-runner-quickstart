@@ -89,6 +89,7 @@ public class NewOuttake {
         if (!initalized) {
             hoodServo.setPosition(0);
             atTargetVelocity = false;
+            currentTargetVelocity = 0;
             initalized = true;
         }
         if (currentTargetVelocity == 0) {
@@ -215,7 +216,7 @@ public class NewOuttake {
             telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
             hoodServo = hardwareMap.get(Servo.class, "hoodServo");
 
-            hoodServo.setDirection(Servo.Direction.FORWARD);
+            hoodServo.setDirection(Servo.Direction.REVERSE);
             init = false;
 //            for (LynxModule hub : allHubs) {
 //                hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
@@ -226,7 +227,7 @@ public class NewOuttake {
         @Override
         public void loop() {
             if (!init) {
-                hoodServo.setPosition(0);
+                hoodServo.setPosition(1);
                 init = true;
             }
 //            clearBulkCache();
