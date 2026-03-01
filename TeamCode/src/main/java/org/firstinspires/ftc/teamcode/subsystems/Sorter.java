@@ -28,10 +28,9 @@ public class Sorter {
     //----------------------------------------------------------------------------------------------
     // State
     //----------------------------------------------------------------------------------------------
-
+    private final int currentChamber = 0;
     private SorterMode currentMode = SorterMode.Intake;
     private ChamberState[] inventory = {ChamberState.Empty, ChamberState.Empty, ChamberState.Empty};
-    private final int currentChamber = 0;
 
     //----------------------------------------------------------------------------------------------
     // Construction
@@ -104,7 +103,7 @@ public class Sorter {
     /**
      * Returns the state of the chamber at the given index.
      *
-     * @param index the chamber index (0..inventory.length-1)
+     * @param index the chamber index (0..NUM_CHAMBERS-1)
      * @return the {@link ChamberState} at the specified index
      * @throws IllegalArgumentException if the index is out of bounds
      * @see #getInventory() for accessing the entire inventory array
@@ -140,7 +139,8 @@ public class Sorter {
     /**
      * Advances the sorter to the next chamber position based on the current mode. For example, if
      * the current mode is Intake and the current chamber is 0, this will move the servo to the
-     * position for chamber 1 in intake mode. If the current chamber is 2, it will wrap around to chamber 0.
+     * position for chamber 1 in intake mode. If the current chamber is 2, it will wrap around to
+     * chamber 0.
      *
      * @see #goToChamber(int) for moving to a specific chamber index
      * @see #goToChamber(ChamberState) for moving to a chamber based on its state
@@ -190,10 +190,10 @@ public class Sorter {
     }
 
     /**
-     * Moves the sorter to the chamber corresponding to the specified {@link ChamberState}. For example, if
-     * the current mode is Intake and the chamberState is Green, this will search the inventory for a chamber
-     * with state Green and move the servo to that chamber's position in intake mode. If no chamber with the
-     * specified state is found, this will throw an exception.
+     * Moves the sorter to the chamber corresponding to the specified {@link ChamberState}. For
+     * example, if the current mode is Intake and the chamberState is Green, this will search the
+     * inventory for a chamber with state Green and move the servo to that chamber's position in
+     * intake mode. If no chamber with the specified state is found, this will throw an exception.
      *
      * @param chamberState the {@link ChamberState} to move to; must not be {@code null}
      * @throws NoSuchElementException if no chamber with the specified state is found
