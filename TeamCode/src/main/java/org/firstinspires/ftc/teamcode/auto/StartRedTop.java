@@ -155,51 +155,25 @@ public class StartRedTop extends LinearOpMode {
                                         goToShootingZone0.build()
                                 )
                         );
+                        autonStep++;
+                        AutonClock.reset();
                     }
+
                 case 3:
                     if (AutonClock.milliseconds() >= 2500 || outtake.isAtTarget()) { //wait till flyhweel is at target or if timer is greater than 2 seconds
-                        Actions.runBlocking(
+                        spindexer.AutoShootingSequenceAuton();
+                        autonStep++;
+                        AutonClock.reset();
+                    }
+                case 4:
+                    if (AutonClock.milliseconds() >= 10000) { //wait till finish dont know what to do next
 
-                        );
                     }
             }
+            spindexer.bootkickerFSM();
+            spindexer.sorterFSM();
         }
 
-
-        Actions.runBlocking(
-                new SequentialAction(
-                        turnInPlace.build()
-//                        goToObelisk.build()
-//                        goToShootingZone0.build(),
-//                        goToBallSet1.build(),
-//                        intakeBallSet1.build(),
-//                        goToShootingZone1.build(),
-//                        goToBallSet2.build()
-                )
-        );
-
-
-//        Actions.runBlocking(
-//                new SequentialAction(
-//                        goToObelisk.build()
-//                )
-//        );
-
-//        Actions.runBlocking(
-//                new SequentialAction(
-//                        goToObelisk.build(),
-//                        //limelight gets motif then updates spindexer motif
-//
-//                        new ParallelAction(
-//                                //spinIndexer w/
-//                                goToShootingZone.build(),
-//                                outtake.AutoRamp(.8),
-//
-//                        ),
-//                        new SleepAction(10)
-//
-//                )
-//        );
     }
 
 

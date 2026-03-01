@@ -91,16 +91,13 @@ public class NewOuttake {
             atTargetVelocity = false;
             initalized = true;
         }
-
-        currentVelocity = flywheel.getVelocity(); // max vel in ticks per second should be 2800
-
-
         if (currentTargetVelocity == 0) {
             flywheel.setPower(0);
             return;
         }
+        clearBulkCache();
 
-
+        currentVelocity = flywheel.getVelocity(); // max vel in ticks per second should be 2800
         double error = currentTargetVelocity - currentVelocity;
         double feedback = error * kP;
         double feedforward = kV * currentTargetVelocity + kS;
@@ -115,10 +112,14 @@ public class NewOuttake {
     }
 
     public String outtakeLog () {
-        if (atTargetVelocity) {
+        if (isAtTargetVelocity()) {
             return "flywheel ready";
         }
         return "Flywheel not ready";
+    }
+
+    public boolean isAtTargetVelocity () {
+        return atTargetVelocity;
     }
 
     public void setTargetVel (int vel) {
