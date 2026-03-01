@@ -114,9 +114,10 @@ public class StartRedTop extends LinearOpMode {
                 isInitialized = true;
                 AutonClock.reset();
             }
-
+            mecanumDrive.localizer.setPose(beginPose);
             spindexer.update();
             outtake.updatePID();
+
 
             switch (autonStep) {
                 case -1:
@@ -157,18 +158,22 @@ public class StartRedTop extends LinearOpMode {
                         );
                         autonStep++;
                         AutonClock.reset();
+                        outtake.setHoodAngle(.5);
+                        outtake.setTargetVel(1000);
                     }
-
+                    break;
                 case 3:
-                    if (AutonClock.milliseconds() >= 2500 || outtake.isAtTarget()) { //wait till flyhweel is at target or if timer is greater than 2 seconds
+                    if (AutonClock.milliseconds() >= 3000 || outtake.isAtTarget()) { //wait till flyhweel is at target or if timer is greater than 2 seconds
                         spindexer.AutoShootingSequenceAuton();
                         autonStep++;
                         AutonClock.reset();
                     }
+                    break;
                 case 4:
                     if (AutonClock.milliseconds() >= 10000) { //wait till finish dont know what to do next
 
                     }
+                    break;
             }
             spindexer.bootkickerFSM();
             spindexer.sorterFSM();
