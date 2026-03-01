@@ -41,7 +41,7 @@ PinpointLocalizer implements Localizer {
 
         double mmPerTick = inPerTick * 25.4;
         driver.setEncoderResolution(1 / mmPerTick, DistanceUnit.MM);
-        driver.setOffsets(-222.25, 0, DistanceUnit.MM); //-222.25 for x?
+        driver.setOffsets(-222.25, 215.9, DistanceUnit.MM); //-222.25 for x?
         driver.resetPosAndIMU();
         driver.recalibrateIMU();
 
