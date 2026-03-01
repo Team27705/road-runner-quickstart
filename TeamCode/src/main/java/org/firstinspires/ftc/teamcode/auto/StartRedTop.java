@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.auto;
 
-import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
@@ -9,6 +7,7 @@ import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
@@ -35,20 +34,20 @@ public class StartRedTop extends LinearOpMode {
     private MecanumDrive mecanumDrive;
     private Spindexer spindexer;
     private Intake intake;
+    private NewOuttake outtake;
 
     //Flag Variables
     private int autonStep;
     private boolean isInitialized = false;
+    private ElapsedTime AutonClock;
     public void buildPaths () {
         goToObelisk = mecanumDrive.actionBuilder(beginPose)
-                .waitSeconds(1)
                 .splineToLinearHeading(new Pose2d(-34, 0, Math.toRadians(180)), Math.toRadians(10));
 
         goToShootingZone0 = mecanumDrive
                 .actionBuilder(new Pose2d(-34, 0, Math.toRadians(180)))
                 .turnTo(Math.toRadians(135))
-                .splineToConstantHeading(new Vector2d(-10, -10), Math.toRadians(135))
-                .waitSeconds(1);
+                .strafeToConstantHeading(new Vector2d(-9, 9));
 
         goToBallSet1 = mecanumDrive
                 .actionBuilder(new Pose2d(-10, -10, Math.toRadians(135)))
@@ -93,37 +92,65 @@ public class StartRedTop extends LinearOpMode {
 
         waitForStart();
 
-        beginPose = new Pose2d(new Vector2d(-60.0, -37), Math.toRadians(0));
+        beginPose = new Pose2d(new Vector2d(-60.0, 37), Math.toRadians(0));
 
         mecanumDrive = new MecanumDrive(this.hardwareMap, beginPose);
         spindexer = new Spindexer(this.hardwareMap, true);
         intake = new Intake(this.hardwareMap);
+        outtake = new NewOuttake(this.hardwareMap);
+        AutonClock = new ElapsedTime();
         // removed unused Limelight and Outtake instances; re-add when using their functionality
         // Limelight limelight = new Limelight(this.hardwareMap);
         // Outtake outtake = new Outtake(this.hardwareMap);
         //https://learnroadrunner.com/trajectorybuilder-functions.html#splineto-endposition-vector2d-endtangent-double
 
         //at 0 heading positive x is forward, negative x is backwards, positive Y is left negative y right when 0,0 intake facing forward
-
-
+        buildPaths();
 
         while (!isStopRequested()) {
+
             if (!isInitialized) {
-                buildPaths();
                 autonStep = 0;
-                isInitialized = false;
+                isInitialized = true;
+                AutonClock.reset();
             }
-            else return;
 
             spindexer.update();
-
+            outtake.updatePID();
 
             switch (autonStep) {
                 case -1:
                     break;
                 case 0:
-//                    Actions.runBlocking( new InstantAction(tra));
+                    if (AutonClock.milliseconds() >= 1000) { //run after
+                        Actions.runBlocking(
+                                new SequentialAction(
+                                goToObelisk.build()
+                                )
+                        );
+                        autonStep++;
+                        AutonClock.reset();
+                    }
                     break;
+                case 1:
+                    if (AutonClock.milliseconds() >= 1000) { //limelight action
+                       //set motif
+                        AutonClock.reset();
+                    }
+                case 2:
+                    if (AutonClock.milliseconds() >= 1000) { // run to tip of triangle shooting position
+                        Actions.runBlocking(
+                                new SequentialAction(
+                                        goToShootingZone0.build()
+                                )
+                        );
+                    }
+                case 3:
+                    if (AutonClock.milliseconds() >= 2500 || outtake.isAtTarget()) { //wait till flyhweel is at target or if timer is greater than 2 seconds
+                        Actions.runBlocking(
+
+                        );
+                    }
             }
         }
 

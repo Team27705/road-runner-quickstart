@@ -191,11 +191,11 @@ public class Spindexer {
         }
 
         //check in Intake mode, the spindexer is not changing target or moving, kicker isnt doing anything,
-        if (gamepad2.dpadUpWasReleased() && kickerState.equals(KickerState.Ready)
-                && sorterState.equals(SorterState.Ready) && spindexerMode.equals(SpindexerMode.Intake)) {
-            //call fsm for servo
-            kickerState = KickerState.SendUp;
-        }
+//        if (gamepad2.dpadUpWasReleased() && kickerState.equals(KickerState.Ready)
+//                && sorterState.equals(SorterState.Ready) && spindexerMode.equals(SpindexerMode.Intake)) {
+//            //call fsm for servo
+//            kickerState = KickerState.SendUp;
+//        }
 
         switch (spindexerMode) {
             case Intake:
@@ -456,6 +456,10 @@ public class Spindexer {
         } else if (motifTagNum == 23) {
             motif = new String[]{"P", "P", "G"};
         }
+    }
+
+    public String[] getCurrentMotif() {
+        return motif;
     }
 
 

@@ -9,7 +9,6 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.ftc.Actions;
-import com.arcrobotics.ftclib.util.InterpLUT;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -35,12 +34,13 @@ public class NewOuttake {
     private double currentVelocity;
     private boolean readyToShoot;
     //coefficents
-    private final double kV = 0.001;
-    private double kS = .415; //kv should be 1 / maxVelocity from encoder, create a short op mod for that
+    private final double kV = 0.001; //kv should be 1 / maxVelocity from encoder, create a short op mod for that
+    private double kS = .415; //may want to remove ks
     private final Servo hoodServo;
     private final VoltageSensor voltage;
 //    private final InterpLUT lut;
     private boolean initalized;
+    private boolean atTargetVelocity;
 
     //notes: 1 PIDFCoefficents for both motors, use the numbers for one for both
     //kS: smallest number to get the motor to spin, overcoming friction
@@ -88,21 +88,34 @@ public class NewOuttake {
 
         if (!initalized) {
             hoodServo.setPosition(0);
+            atTargetVelocity = false;
             initalized = true;
         }
-        clearBulkCache();
 
         currentVelocity = flywheel.getVelocity(); // max vel in ticks per second should be 2800
+
+
+        if (currentTargetVelocity == 0) {
+            flywheel.setPower(0);
+            return;
+        }
+
+
         double error = currentTargetVelocity - currentVelocity;
         double feedback = error * kP;
         double feedforward = kV * currentTargetVelocity + kS;
-        double pidOutput = Math.max(-1.0, Math.min(1,feedback + feedforward));
+
+        atTargetVelocity = error == 0 || Math.abs(error - 20) == 0;
+        clearBulkCache();
+
+
+        double pidOutput = Math.max(-1.0, Math.min(1,feedback + feedforward * 12/ voltage.getVoltage() ));
         //prob want to implement some deadzone check for error and break out of updatePID while returning
         flywheel.setPower( pidOutput);
     }
 
-    public String atTarget () {
-        if (currentVelocity - currentTargetVelocity + 20 == 0 || currentVelocity - currentTargetVelocity == 0) {
+    public String outtakeLog () {
+        if (atTargetVelocity) {
             return "flywheel ready";
         }
         return "Flywheel not ready";
@@ -148,6 +161,10 @@ public class NewOuttake {
                 currentVelocity,
                 hoodServo.getPosition()
         );
+    }
+
+    public boolean isAtTarget() {
+        return atTargetVelocity;
     }
 
     //https://youtu.be/aPNCpZzCTKg?t=786

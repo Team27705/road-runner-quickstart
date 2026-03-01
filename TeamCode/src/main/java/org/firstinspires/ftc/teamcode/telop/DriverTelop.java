@@ -9,12 +9,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystems.NewOuttake;
 import org.firstinspires.ftc.teamcode.subsystems.Spindexer;
-import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,9 +60,10 @@ public class DriverTelop extends LinearOpMode {
             //create an action scheduler here and then add actions from detecting userInputs
             runTime.reset();
             controllerBehaviorA();
-            controllerBehaviorB();
-            outtake.updatePID();
 
+            outtake.updatePID();
+            spindexer.update(gamepad2);
+            controllerBehaviorB();
 
 //            List<Action> newActions = new ArrayList<>();
 //            for (Action action: runningActions) {
@@ -121,9 +120,13 @@ public class DriverTelop extends LinearOpMode {
             outtake.setHoodAngle(.25);
             outtake.setTargetVel(800);
         }
+        else if (gamepad2.dpadLeftWasReleased()) {
+            outtake.setTargetVel(0);
+        }
 
-        spindexer.update(gamepad2); //start and x are used
-        telemetry.addLine(outtake.atTarget());
+         //start and x are used
+        telemetry.addLine(outtake.outtakeLog());
+        telemetry.addData("motif: ", spindexer.getCurrentMotif());
     }
 
     public void updateTelem () {

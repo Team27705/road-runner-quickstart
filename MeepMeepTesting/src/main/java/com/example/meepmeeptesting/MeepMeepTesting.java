@@ -56,7 +56,7 @@ public class MeepMeepTesting {
         TrajectoryActionBuilder goToShootingZone0 = mecanumDrive
                 .actionBuilder(new Pose2d(-34, 0, Math.toRadians(180)))
                 .turnTo(Math.toRadians(135))
-                .splineToConstantHeading(new Vector2d(-10, 10), Math.toRadians(135))
+                .strafeToConstantHeading(new Vector2d(-9, 9))
                 .waitSeconds(1);
 
         TrajectoryActionBuilder goToBallSet1 = mecanumDrive
@@ -94,22 +94,25 @@ public class MeepMeepTesting {
 
         // Build trajectory actions with updated positions
         com.acmerobotics.roadrunner.Action[] moveActions = new com.acmerobotics.roadrunner.Action[8];
-        for (int i = 0; i < 8; i++) {
-            TrajectoryActionBuilder moveBackwards = mecanumDrive
-                    .actionBuilder(position)
-                    .lineToX(position.position.x - 5); // move 5 inches
-            moveActions[i] = moveBackwards.build();
-            // Update position for next iteration
-            position = new Pose2d(position.position.x - 5, position.position.y, position.heading.toDouble());
-        }
-
-        myBot.runAction(new SequentialAction(moveActions));
+//        for (int i = 0; i < 8; i++) {
+//            TrajectoryActionBuilder moveBackwards = mecanumDrive
+//                    .actionBuilder(position)
+//                    .lineToX(position.position.x - 5); // move 5 inches
+//            moveActions[i] = moveBackwards.build();
+//            // Update position for next iteration
+//            position = new Pose2d(position.position.x - 5, position.position.y, position.heading.toDouble());
+//        }
+//
+//        myBot.runAction(new SequentialAction(moveActions));
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_DECODE_OFFICIAL)
                 .setDarkMode(true)
                 .setBackgroundAlpha(0.95f)
                 .addEntity(myBot)
                 .start();
+
+        myBot.runAction(new SequentialAction(goToObelisk.build(),
+                goToShootingZone0.build()));
     }
 
     private static Pose2d getLastPose() {
