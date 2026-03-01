@@ -13,6 +13,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystems.NewOuttake;
 import org.firstinspires.ftc.teamcode.subsystems.Spindexer;
+import org.firstinspires.ftc.teamcode.subsystems.hardwares.Limelighter;
 
 
 @Autonomous(name = "Start Red Top")
@@ -35,6 +36,7 @@ public class StartRedTop extends LinearOpMode {
     private Spindexer spindexer;
     private Intake intake;
     private NewOuttake outtake;
+    private Limelighter limelighter;
 
     //Flag Variables
     private int autonStep;
@@ -98,10 +100,8 @@ public class StartRedTop extends LinearOpMode {
         spindexer = new Spindexer(this.hardwareMap, true);
         intake = new Intake(this.hardwareMap);
         outtake = new NewOuttake(this.hardwareMap);
+        limelighter = new Limelighter(this.hardwareMap);
         AutonClock = new ElapsedTime();
-        // removed unused Limelight and Outtake instances; re-add when using their functionality
-        // Limelight limelight = new Limelight(this.hardwareMap);
-        // Outtake outtake = new Outtake(this.hardwareMap);
         //https://learnroadrunner.com/trajectorybuilder-functions.html#splineto-endposition-vector2d-endtangent-double
 
         //at 0 heading positive x is forward, negative x is backwards, positive Y is left negative y right when 0,0 intake facing forward
@@ -133,10 +133,21 @@ public class StartRedTop extends LinearOpMode {
                     }
                     break;
                 case 1:
-                    if (AutonClock.milliseconds() >= 1000) { //limelight action
-                       //set motif
+                    if (AutonClock.milliseconds() >= 1000) { //limelight action: scan obelisk AprilTag and set motif
+                        try {
+                            int tagId = limelighter.getLatestAprilTagID();
+                            if (tagId != 21 && tagId != 22 && tagId != 23) {
+                                throw new Limelighter.NoAprilTagException("AprilTag ID " + tagId + " is not a valid motif tag!");
+                            }
+                            spindexer.setMotif(tagId);
+                        } catch (Limelighter.NoAprilTagException e) {
+                            // no tag visible; keep Spindexer's default motif
+                            spindexer.setMotif(21);
+                        }
+                        autonStep++;
                         AutonClock.reset();
                     }
+                    break;
                 case 2:
                     if (AutonClock.milliseconds() >= 1000) { // run to tip of triangle shooting position
                         Actions.runBlocking(
