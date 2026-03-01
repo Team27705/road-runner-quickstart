@@ -13,10 +13,10 @@ import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 public class MeepMeepTesting {
 
     private static RoadRunnerBotEntity myBot;
-    private final Pose2d startRedTop = new Pose2d(new Vector2d(-60.0, -37), Math.toRadians(0));
-    private final Pose2d startblueTop = new Pose2d(new Vector2d(-60.0, 37), Math.toRadians(0));
-    private final Pose2d startBlueBottom = new Pose2d(new Vector2d(60.0, -13), 180);
-    private final Pose2d startRedBottom = new Pose2d(new Vector2d(60.0, 13), 180);
+    private static final Pose2d startRedTop = new Pose2d(new Vector2d(-60.0, -37), Math.toRadians(0));
+    private static final Pose2d startblueTop = new Pose2d(new Vector2d(-60.0, 37), Math.toRadians(0));
+    private static final Pose2d startBlueBottom = new Pose2d(new Vector2d(60.0, -13), 180);
+    private static final Pose2d startRedBottom = new Pose2d(new Vector2d(60.0, 13), 180);
 
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
@@ -42,7 +42,7 @@ public class MeepMeepTesting {
         // 3ish mats),
         // Pos3 :
 
-        Pose2d beginPose = new Pose2d(new Vector2d(-60.0, 37), Math.toRadians(0));
+        Pose2d beginPose = startRedTop; // change this to test different starting positions
 
         DriveShim mecanumDrive = myBot.getDrive();
 
@@ -50,14 +50,12 @@ public class MeepMeepTesting {
         // start from goal go to center
 
         TrajectoryActionBuilder goToObelisk = mecanumDrive.actionBuilder(beginPose)
-                .waitSeconds(1)
                 .splineToLinearHeading(new Pose2d(-34, 0, Math.toRadians(180)), Math.toRadians(10));
 
         TrajectoryActionBuilder goToShootingZone0 = mecanumDrive
                 .actionBuilder(new Pose2d(-34, 0, Math.toRadians(180)))
                 .turnTo(Math.toRadians(135))
-                .strafeToConstantHeading(new Vector2d(-9, 9))
-                .waitSeconds(1);
+                .strafeToConstantHeading(new Vector2d(-9, 9));
 
         TrajectoryActionBuilder goToBallSet1 = mecanumDrive
                 .actionBuilder(new Pose2d(-10, 10, Math.toRadians(135)))
@@ -86,33 +84,22 @@ public class MeepMeepTesting {
                 .splineToLinearHeading(new Pose2d(-10, 10, Math.toRadians(135)), Math.toRadians(30))
                 .waitSeconds(1);
 
-        TrajectoryActionBuilder turnInPlace = mecanumDrive
-                .actionBuilder(new Pose2d(0,0,Math.toRadians(0)))
-                .turn(Math.toRadians(360));
-
-        Pose2d position = new Pose2d(0,0, Math.toRadians(0));
-
-        // Build trajectory actions with updated positions
-        com.acmerobotics.roadrunner.Action[] moveActions = new com.acmerobotics.roadrunner.Action[8];
-//        for (int i = 0; i < 8; i++) {
-//            TrajectoryActionBuilder moveBackwards = mecanumDrive
-//                    .actionBuilder(position)
-//                    .lineToX(position.position.x - 5); // move 5 inches
-//            moveActions[i] = moveBackwards.build();
-//            // Update position for next iteration
-//            position = new Pose2d(position.position.x - 5, position.position.y, position.heading.toDouble());
-//        }
-//
-//        myBot.runAction(new SequentialAction(moveActions));
+        myBot.runAction(new SequentialAction(
+                goToObelisk.build(),
+                goToShootingZone0.build(),
+                goToBallSet1.build(),
+                intakeBallSet1.build(),
+                goToShootingZone1.build(),
+                goToBallSet2.build(),
+                intakeBallSet2.build(),
+                goToShootingZone2.build()
+        ));
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_DECODE_OFFICIAL)
                 .setDarkMode(true)
                 .setBackgroundAlpha(0.95f)
                 .addEntity(myBot)
                 .start();
-
-        myBot.runAction(new SequentialAction(goToObelisk.build(),
-                goToShootingZone0.build()));
     }
 
     private static Pose2d getLastPose() {
