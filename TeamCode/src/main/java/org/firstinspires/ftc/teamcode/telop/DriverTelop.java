@@ -112,16 +112,16 @@ public class DriverTelop extends LinearOpMode {
 
         if (gamepad2.dpadUpWasReleased()) { // close shot
             outtake.setHoodAngle(.25);
-            outtake.setTargetVel(600);
+            outtake.setTargetVel(1000);
 
         }
         else if (gamepad2.dpadDownWasReleased()) { //far shot
             outtake.setHoodAngle(.7);
-            outtake.setTargetVel(650);
+            outtake.setTargetVel(1300);
         }
         else if (gamepad2.dpadRightWasReleased()){ //mid shot
             outtake.setHoodAngle(.5);
-            outtake.setTargetVel(700);
+            outtake.setTargetVel(1200);
         }
         else if (gamepad2.dpadLeftWasReleased()) {
             outtake.setTargetVel(0);
