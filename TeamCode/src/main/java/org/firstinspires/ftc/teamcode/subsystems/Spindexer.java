@@ -114,9 +114,9 @@ public class Spindexer {
         if (kickerState.equals(KickerState.Ready)) {
             sorter.update();
         }
-        else {
-            sorter.setPower(0);
-        }
+//        else {
+//            sorter.setPower(0);
+//        }
 
         if (spindexerMode.equals(SpindexerMode.AutonWait)) return;
 
@@ -218,12 +218,15 @@ public class Spindexer {
         switch (kickerState) {
             case Ready:
                 bootkickerCalled = false;
+                bootKickerTimer.reset();
                 break;
             case SendUp:
-                bootkickerCalled = true;
-                bootkicker.setPosition(0.35);
-                kickerState = KickerState.SendDown;
-                bootKickerTimer.reset();
+                if (bootKickerTimer.milliseconds() >= 200) {
+                    bootkickerCalled = true;
+                    bootkicker.setPosition(0.35);
+                    kickerState = KickerState.SendDown;
+                    bootKickerTimer.reset();
+                }
                 break;
             case SendDown:
                 if (bootKickerTimer.milliseconds() >= BOOTKICKER_DELAY) {

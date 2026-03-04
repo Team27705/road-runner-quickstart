@@ -110,30 +110,31 @@ public class StartRedTop extends LinearOpMode {
         while (!isStopRequested()) {
 
             if (!isInitialized) {
-                autonStep = 0;
+                autonStep = -1;
                 isInitialized = true;
                 AutonClock.reset();
             }
-            mecanumDrive.localizer.setPose(beginPose);
+            mecanumDrive.localizer.update();
             spindexer.update();
             outtake.updatePID();
 
 
+
             switch (autonStep) {
                 case -1:
-                    break;
+
                 case 0:
-                    if (AutonClock.milliseconds() >= 1000) { //run after
-                        Actions.runBlocking(
-                                new SequentialAction(
-                                goToObelisk.build()
-                                )
-                        );
-                        autonStep++;
-                        AutonClock.reset();
-                    }
-                    break;
+
                 case 1:
+                    Actions.runBlocking(
+                            new SequentialAction(
+                                    goToObelisk.build()
+                            )
+                    );
+                    autonStep++;
+                    AutonClock.reset();
+                    break;
+                case 2:
                     if (AutonClock.milliseconds() >= 1000) { //limelight action: scan obelisk AprilTag and set motif
                         try {
                             int tagId = limelighter.getLatestAprilTagID();
@@ -149,7 +150,7 @@ public class StartRedTop extends LinearOpMode {
                         AutonClock.reset();
                     }
                     break;
-                case 2:
+                case 3:
                     if (AutonClock.milliseconds() >= 1000) { // run to tip of triangle shooting position
                         Actions.runBlocking(
                                 new SequentialAction(
@@ -162,14 +163,14 @@ public class StartRedTop extends LinearOpMode {
                         outtake.setTargetVel(1000);
                     }
                     break;
-                case 3:
+                case 4:
                     if (AutonClock.milliseconds() >= 3000 || outtake.isAtTarget()) { //wait till flyhweel is at target or if timer is greater than 2 seconds
                         spindexer.AutoShootingSequenceAuton();
                         autonStep++;
                         AutonClock.reset();
                     }
                     break;
-                case 4:
+                case 5:
                     if (AutonClock.milliseconds() >= 10000) { //wait till finish dont know what to do next
 
                     }
