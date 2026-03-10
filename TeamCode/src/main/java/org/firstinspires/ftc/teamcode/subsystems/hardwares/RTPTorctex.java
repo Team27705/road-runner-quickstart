@@ -100,9 +100,9 @@ public class RTPTorctex {
         homeAngle = previousAngle;
 
         // Default PID coefficients
-        kP = 0.025; //.015 oriignal .26
+        kP = 0.028; //.015 oriignal .26
         kI = 0.0000;
-        kD = 0.0025;
+        kD = 0.0001;
         integralSum = 0.0;
         lastError = 0.0;
         maxIntegralSum = 100.0;

@@ -223,7 +223,7 @@ public class Spindexer {
             case SendUp:
                 if (bootKickerTimer.milliseconds() >= 200) {
                     bootkickerCalled = true;
-                    bootkicker.setPosition(0.35);
+                    bootkicker.setPosition(0.55);
                     kickerState = KickerState.SendDown;
                     bootKickerTimer.reset();
                 }
@@ -262,6 +262,8 @@ public class Spindexer {
             case Ready:
                 break;
             case Spinning:
+                // i think this is causing the error, we should check if a clock sorter.isAtTarget()
+                //should be at target for 100 ms
                 if (sorter.isAtTarget() && spindexerTimer.milliseconds() >= 100) {
                     sorterState = SorterState.Ready;
                 }
@@ -362,7 +364,7 @@ public class Spindexer {
                 }
                 break;
             case WaitForSpindexer:
-                if (spindexerTimer.milliseconds() >= 1000 && sorterState == SorterState.Ready) {
+                if (spindexerTimer.milliseconds() >= 5000 && sorterState == SorterState.Ready) {
                     shootSequenceState = ShootSequenceState.KickArtifact;
                 }
             case KickArtifact:
