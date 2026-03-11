@@ -16,9 +16,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class RTPTorctex {
     // ...existing code...
     // FTC Dashboard configuration for PID tuning
-    public static double DASHBOARD_kP = 0.028;
+    public static double DASHBOARD_kP = 0.04;
     public static double DASHBOARD_kI = 0.0000;
-    public static double DASHBOARD_kD = 0.0001;
+    public static double DASHBOARD_kD = 0.001;
     public static double DASHBOARD_MAX_INTEGRAL_SUM = 100.0;
     public static double DASHBOARD_MAX_POWER = 0.9;
 
@@ -352,13 +352,14 @@ public class RTPTorctex {
         double output = pTerm + iTerm + dTerm;
 
         // Deadzone for output
-        final double DEADZONE = 0.25;
+        final double DEADZONE = .25;
         if (Math.abs(error) > DEADZONE) {
 
             double power = Math.min(maxPower, Math.abs(output)) * Math.signum(output);
             setPower(power);
             atPos = false;
-        } else {
+        }
+        else {
             setPower(0);
             atPos = true;
         }

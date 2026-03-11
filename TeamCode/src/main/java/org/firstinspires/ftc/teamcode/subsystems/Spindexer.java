@@ -224,7 +224,7 @@ public class Spindexer {
             case SendUp:
                 if (bootKickerTimer.milliseconds() >= 200) {
                     bootkickerCalled = true;
-                    bootkicker.setPosition(0.55);
+                    bootkicker.setPosition(0.3);
                     kickerState = KickerState.SendDown;
                     bootKickerTimer.reset();
                 }
