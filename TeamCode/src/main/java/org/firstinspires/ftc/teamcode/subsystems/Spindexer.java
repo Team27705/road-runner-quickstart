@@ -51,6 +51,7 @@ public class Spindexer {
     private int teleopMotif;
     private boolean colorFound;
     private double colorStartTime;
+    private boolean sorterAtTarget; // Track if sorter has reached target for 100ms delay
     private final ElapsedTime bootKickerTimer;
     private final ElapsedTime colorSensorTimer;
     private final ElapsedTime spindexerTimer;
@@ -260,12 +261,23 @@ public class Spindexer {
     public void sorterFSM() {
         switch (sorterState) {
             case Ready:
+                sorterAtTarget = false; // Reset flag when returning to Ready
                 break;
             case Spinning:
-                // i think this is causing the error, we should check if a clock sorter.isAtTarget()
-                //should be at target for 100 ms
-                if (sorter.isAtTarget() && spindexerTimer.milliseconds() >= 100) {
-                    sorterState = SorterState.Ready;
+                // Check if sorter has reached target for at least 100 ms
+                if (sorter.isAtTarget()) {
+                    if (!sorterAtTarget) {
+                        // First time reaching target - reset timer
+                        sorterAtTarget = true;
+                        spindexerTimer.reset();
+                    }
+                    // Check if we've been at target for 100ms
+                    if (spindexerTimer.milliseconds() >= 200) {
+                        sorterState = SorterState.Ready;
+                    }
+                } else {
+                    // Lost target - reset the flag
+                    sorterAtTarget = false;
                 }
                 break;
             case SpinToEmptyChamber: //only use for intake
