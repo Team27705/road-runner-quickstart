@@ -16,9 +16,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class RTPTorctex {
     // ...existing code...
     // FTC Dashboard configuration for PID tuning
-    public static double DASHBOARD_kP = 0.04;
+    public static double DASHBOARD_kP = 0.032;
     public static double DASHBOARD_kI = 0.0000;
-    public static double DASHBOARD_kD = 0.001;
+    public static double DASHBOARD_kD = 0.00125;
     public static double DASHBOARD_MAX_INTEGRAL_SUM = 100.0;
     public static double DASHBOARD_MAX_POWER = 0.9;
 
