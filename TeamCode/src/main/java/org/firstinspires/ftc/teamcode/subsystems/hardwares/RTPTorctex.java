@@ -3,14 +3,25 @@ package org.firstinspires.ftc.teamcode.subsystems.hardwares;
 import android.annotation.SuppressLint;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
 //singultech
+@Config
 public class RTPTorctex {
+    // ...existing code...
+    // FTC Dashboard configuration for PID tuning
+    public static double DASHBOARD_kP = 0.028;
+    public static double DASHBOARD_kI = 0.0000;
+    public static double DASHBOARD_kD = 0.0001;
+    public static double DASHBOARD_MAX_INTEGRAL_SUM = 100.0;
+    public static double DASHBOARD_MAX_POWER = 0.9;
+
     // Encoder for servo position feedback
     private final AnalogInput servoEncoder;
     // Continuous rotation servo
@@ -99,13 +110,13 @@ public class RTPTorctex {
         totalRotation = 0;
         homeAngle = previousAngle;
 
-        // Default PID coefficients
-        kP = 0.028; //.015 oriignal .26
-        kI = 0.0000;
-        kD = 0.0001;
+        // Default PID coefficients - load from dashboard config
+        kP = DASHBOARD_kP;
+        kI = DASHBOARD_kI;
+        kD = DASHBOARD_kD;
         integralSum = 0.0;
         lastError = 0.0;
-        maxIntegralSum = 100.0;
+        maxIntegralSum = DASHBOARD_MAX_INTEGRAL_SUM;
 //
 //        kP = 0;
 //        kI = 0;
@@ -114,7 +125,7 @@ public class RTPTorctex {
         pidTimer = new ElapsedTime();
         pidTimer.reset();
 
-        maxPower = 0.9; //.25 is deafult
+        maxPower = DASHBOARD_MAX_POWER;
         cliffs = 0;
     }
     // endregion
@@ -245,7 +256,7 @@ public class RTPTorctex {
 
     // Check if servo is at target (default tolerance)
     public boolean isAtTarget() {
-        return isAtTarget(5);
+        return isAtTarget(2);
     }
 
     // Check if servo is at target (custom tolerance)
@@ -276,8 +287,20 @@ public class RTPTorctex {
         return atPos;
     }
 
+    // Sync PID coefficients from FTC Dashboard configuration
+    private void syncDashboardConfig() {
+        kP = DASHBOARD_kP;
+        kI = DASHBOARD_kI;
+        kD = DASHBOARD_kD;
+        maxIntegralSum = DASHBOARD_MAX_INTEGRAL_SUM;
+        maxPower = DASHBOARD_MAX_POWER;
+    }
+
     // Main update loop: updates rotation, computes PID, applies power
     public synchronized void update() {
+        // Sync latest values from FTC Dashboard
+        syncDashboardConfig();
+
         double currentAngle = getCurrentAngle();
         TRACK_CURRENT_ANGLE = currentAngle; //for telem
         double angleDifference = currentAngle - previousAngle;
