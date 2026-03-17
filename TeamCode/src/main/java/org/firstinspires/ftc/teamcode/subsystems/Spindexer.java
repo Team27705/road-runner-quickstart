@@ -21,7 +21,7 @@ public class Spindexer {
     //note:deprecate Spindexer.java once done
 
     // Static constants
-    private static final int TIME_TO_DETECT = 750; //millis TODO: Increase delay and test
+    private static final int TIME_TO_DETECT = 250; //millis TODO: Increase delay and test
     private static final int BOOTKICKER_DELAY = 500; //millis
     public static String[] motif = new String[]{"G", "P", "P"};
     private static boolean isInitalized;
@@ -224,7 +224,7 @@ public class Spindexer {
             case SendUp:
                 if (bootKickerTimer.milliseconds() >= 200) {
                     bootkickerCalled = true;
-                    bootkicker.setPosition(0.3);
+                    bootkicker.setPosition(0.4);
                     kickerState = KickerState.SendDown;
                     bootKickerTimer.reset();
                 }
@@ -376,9 +376,10 @@ public class Spindexer {
                 }
                 break;
             case WaitForSpindexer:
-                if (spindexerTimer.milliseconds() >= 1000 && sorterState == SorterState.Ready) {
+                if (spindexerTimer.milliseconds() >= 500 && sorterState == SorterState.Ready) {
                     shootSequenceState = ShootSequenceState.KickArtifact;
                 }
+                break;
             case KickArtifact:
                 if (sorterState == SorterState.Ready) {
                     kickerState = KickerState.SendUp;
