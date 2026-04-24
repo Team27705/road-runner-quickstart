@@ -21,7 +21,7 @@ public class Spindexer {
     //note:deprecate Spindexer.java once done
 
     // Static constants
-    private static final int TIME_TO_DETECT = 250; //millis TODO: Increase delay and test
+    private static final int TIME_TO_DETECT = 750; //millis TODO: Increase delay and test
     private static final int BOOTKICKER_DELAY = 500; //millis
     public static String[] motif = new String[]{"G", "P", "P"};
     private static boolean isInitalized;
@@ -376,7 +376,7 @@ public class Spindexer {
                 }
                 break;
             case WaitForSpindexer:
-                if (spindexerTimer.milliseconds() >= 5000 && sorterState == SorterState.Ready) {
+                if (spindexerTimer.milliseconds() >= 1000 && sorterState == SorterState.Ready) {
                     shootSequenceState = ShootSequenceState.KickArtifact;
                 }
             case KickArtifact:
@@ -449,7 +449,7 @@ public class Spindexer {
             g = revColorSensor.green();
             b = revColorSensor.blue();
             opacity = getARGB();
-            if (opacity >= 300000000) { // higher opacity means no object detected
+            if (opacity <= 140000000) { // higher opacity means no object detected
                 return "E";
             } else if (g > r && g > b && g > 50 && g < 600) { //sometimes g or b will go to some absurd value in the hundreds
                 return "G";
