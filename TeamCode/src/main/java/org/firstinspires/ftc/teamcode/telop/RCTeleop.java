@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.telop;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -16,13 +17,15 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import java.util.ArrayList;
 import java.util.List;
 
-@TeleOp(name = "RC Teleop")
+@TeleOp(name = "RCTeleop")
 public class RCTeleop extends LinearOpMode {
 
     private MecanumDrive driveTrain;
     private Intake intake;
     private NewOuttake outtake;
     private Spindexer spindexer;
+
+    // Vision variables
     private VisionPortal visionPortal;
 
     private List<Action> runningActions = new ArrayList<>();
@@ -37,13 +40,16 @@ public class RCTeleop extends LinearOpMode {
         spindexer = new Spindexer(this.hardwareMap, false);
         runTime = new ElapsedTime();
 
-        // --- WEBCAM INIT ---
-        // This sets up the stream so you can view it on the Driver Hub
+        // --- WEBCAM & DASHBOARD INIT ---
         visionPortal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, "webcam"))
                 .build();
 
-        telemetry.addLine("Wait for camera to initialize...");
+        // This line sends the camera feed to FTC Dashboard
+        // The '0' indicates the maximum frames per second (0 means auto)
+        FtcDashboard.getInstance().startCameraStream(visionPortal, 0);
+
+        telemetry.addLine("Camera streaming to Dashboard...");
         telemetry.update();
 
         waitForStart();
@@ -55,7 +61,7 @@ public class RCTeleop extends LinearOpMode {
             spindexer.update(gamepad1);
             outtake.updatePID();
 
-            // RR Action Loop
+            // Handle Roadrunner Actions
             List<Action> newActions = new ArrayList<>();
             for (Action action : runningActions) {
                 if (action.run(null)) {
@@ -67,7 +73,7 @@ public class RCTeleop extends LinearOpMode {
             updateTelem();
         }
 
-        // Clean up camera on stop
+        // Properly shut down the portal when done
         visionPortal.close();
     }
 
@@ -109,6 +115,7 @@ public class RCTeleop extends LinearOpMode {
     }
 
     private void updateTelem() {
+        // Send telemetry to both Driver Station and Dashboard
         telemetry.addData("Camera Status", visionPortal.getCameraState());
         telemetry.addLine(outtake.outtakeLog());
 
@@ -116,6 +123,11 @@ public class RCTeleop extends LinearOpMode {
         if (motif != null && motif.length >= 3) {
             telemetry.addData("Motif", "%s, %s, %s", motif[0], motif[1], motif[2]);
         }
+
+        // This ensures the text data also shows up on your laptop
+        FtcDashboard.getInstance().getTelemetry().addData("Status", "Running");
+        FtcDashboard.getInstance().getTelemetry().update();
+
         telemetry.update();
     }
 }
