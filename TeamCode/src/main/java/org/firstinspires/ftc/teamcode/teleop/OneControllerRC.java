@@ -1,55 +1,67 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystems.NewOuttake;
 import org.firstinspires.ftc.teamcode.subsystems.Spindexer;
+import org.firstinspires.ftc.vision.VisionPortal;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@TeleOp(name = "One Controller TeleOp", group = "Control")
-public class OneControllerTeleOp extends LinearOpMode {
+@TeleOp(name = "One Controller RC", group = "Control")
+public class OneControllerRC extends LinearOpMode {
 
     private MecanumDrive driveTrain;
     private Intake intake;
     private NewOuttake outtake;
     private Spindexer spindexer;
-    private Pose2d initialPosition;
+
+    // Vision variables
+    private VisionPortal visionPortal;
 
     private List<Action> runningActions = new ArrayList<>();
     private ElapsedTime runTime;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        initialPosition = new Pose2d(0, 0, 0);
-
-        driveTrain = new MecanumDrive(this.hardwareMap, initialPosition);
+        // --- SUBSYSTEM INIT ---
+        driveTrain = new MecanumDrive(this.hardwareMap, new Pose2d(0, 0, 0));
         intake = new Intake(this.hardwareMap);
         outtake = new NewOuttake(this.hardwareMap);
-        // Spindexer now listens to gamepad1
         spindexer = new Spindexer(this.hardwareMap, false);
-
         runTime = new ElapsedTime();
+
+        // --- WEBCAM & DASHBOARD INIT ---
+        visionPortal = new VisionPortal.Builder()
+                .setCamera(hardwareMap.get(WebcamName.class, "webcam"))
+                .build();
+
+        // This line sends the camera feed to FTC Dashboard
+        // The '0' indicates the maximum frames per second (0 means auto)
+        FtcDashboard.getInstance().startCameraStream(visionPortal, 0);
+
+        telemetry.addLine("Camera streaming to Dashboard...");
+        telemetry.update();
 
         waitForStart();
 
         while (opModeIsActive()) {
-            // All updates now pass gamepad1
             driveLogic();
             intakeLogic();
             outtakeLogic();
             spindexer.update(gamepad1);
-
             outtake.updatePID();
 
-            // Roadrunner Action System (Placeholders for TeleOp actions)
+            // Handle Roadrunner Actions
             List<Action> newActions = new ArrayList<>();
             for (Action action : runningActions) {
                 if (action.run(null)) {
@@ -60,6 +72,9 @@ public class OneControllerTeleOp extends LinearOpMode {
 
             updateTelem();
         }
+
+        // Properly shut down the portal when done
+        visionPortal.close();
     }
 
     private void driveLogic() {
@@ -67,7 +82,6 @@ public class OneControllerTeleOp extends LinearOpMode {
         double leftY = -gamepad1.left_stick_y;
         double rightX = gamepad1.right_stick_x;
 
-        // Deadzones
         if (Math.abs(leftY) < 0.1) leftY = 0;
         if (Math.abs(leftX) < 0.1) leftX = 0;
         if (Math.abs(rightX) < 0.1) rightX = 0;
@@ -86,22 +100,23 @@ public class OneControllerTeleOp extends LinearOpMode {
     }
 
     private void outtakeLogic() {
-        // Presets mapped to D-pad
-        if (gamepad1.dpad_up) { // Close shot
+        if (gamepad1.dpad_up) {
             outtake.setHoodAngle(0.25);
             outtake.setTargetVel(780);
-        } else if (gamepad1.dpad_down) { // Far shot
+        } else if (gamepad1.dpad_down) {
             outtake.setHoodAngle(0.7);
             outtake.setTargetVel(1300);
-        } else if (gamepad1.dpad_right) { // Mid shot
+        } else if (gamepad1.dpad_right) {
             outtake.setHoodAngle(0.5);
             outtake.setTargetVel(1000);
-        } else if (gamepad1.dpad_left) { // Stop Shooter
+        } else if (gamepad1.dpad_left) {
             outtake.setTargetVel(0);
         }
     }
 
     private void updateTelem() {
+        // Send telemetry to both Driver Station and Dashboard
+        telemetry.addData("Camera Status", visionPortal.getCameraState());
         telemetry.addLine(outtake.outtakeLog());
 
         String[] motif = spindexer.getCurrentMotif();
@@ -109,7 +124,10 @@ public class OneControllerTeleOp extends LinearOpMode {
             telemetry.addData("Motif", "%s, %s, %s", motif[0], motif[1], motif[2]);
         }
 
-        telemetry.addData("Status", "Run Time: " + runTime.toString());
+        // This ensures the text data also shows up on your laptop
+        FtcDashboard.getInstance().getTelemetry().addData("Status", "Running");
+        FtcDashboard.getInstance().getTelemetry().update();
+
         telemetry.update();
     }
 }

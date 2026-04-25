@@ -17,15 +17,16 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import java.util.ArrayList;
 import java.util.List;
 
-@TeleOp(name = "RCTeleop")
-public class RCTeleop extends LinearOpMode {
+@TeleOp (name = "Driver RC", group = "Control")
+public class DriverRC extends LinearOpMode {
 
     private MecanumDrive driveTrain;
     private Intake intake;
     private NewOuttake outtake;
     private Spindexer spindexer;
+    private Pose2d intialPosition;
 
-    // Vision variables
+    // Vision Portal for the webcam
     private VisionPortal visionPortal;
 
     private List<Action> runningActions = new ArrayList<>();
@@ -33,101 +34,105 @@ public class RCTeleop extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        // --- SUBSYSTEM INIT ---
-        driveTrain = new MecanumDrive(this.hardwareMap, new Pose2d(0, 0, 0));
+
+        intialPosition = new Pose2d(0,0,0);
+
+        driveTrain = new MecanumDrive(this.hardwareMap, intialPosition);
         intake = new Intake(this.hardwareMap);
         outtake = new NewOuttake(this.hardwareMap);
         spindexer = new Spindexer(this.hardwareMap, false);
-        runTime = new ElapsedTime();
 
-        // --- WEBCAM & DASHBOARD INIT ---
+        // --- WEBCAM INITIALIZATION ---
         visionPortal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, "webcam"))
                 .build();
 
-        // This line sends the camera feed to FTC Dashboard
-        // The '0' indicates the maximum frames per second (0 means auto)
+        // Send the feed to FTC Dashboard (192.168.43.1:8080/dash)
         FtcDashboard.getInstance().startCameraStream(visionPortal, 0);
 
-        telemetry.addLine("Camera streaming to Dashboard...");
+        runTime = new ElapsedTime();
+
+        telemetry.addLine("Camera Initialized and Streaming to Dashboard");
         telemetry.update();
 
         waitForStart();
 
         while (opModeIsActive()) {
-            driveLogic();
-            intakeLogic();
-            outtakeLogic();
-            spindexer.update(gamepad1);
+            spindexer.update(gamepad2);
+            controllerBehaviorA();
             outtake.updatePID();
 
-            // Handle Roadrunner Actions
+            controllerBehaviorB();
+
             List<Action> newActions = new ArrayList<>();
-            for (Action action : runningActions) {
+            for (Action action: runningActions) {
                 if (action.run(null)) {
                     newActions.add(action);
                 }
             }
             runningActions = newActions;
 
-            updateTelem();
+            telemetry.update();
         }
 
-        // Properly shut down the portal when done
+        // Close camera on stop
         visionPortal.close();
     }
 
-    private void driveLogic() {
+    public void controllerBehaviorA () {
         double leftX = gamepad1.left_stick_x * 1.1;
         double leftY = -gamepad1.left_stick_y;
-        double rightX = gamepad1.right_stick_x;
+        double rightX = gamepad1.right_stick_x ;
 
-        if (Math.abs(leftY) < 0.1) leftY = 0;
-        if (Math.abs(leftX) < 0.1) leftX = 0;
-        if (Math.abs(rightX) < 0.1) rightX = 0;
+        if (leftY >= -0.1  && leftY <= 0.1) {
+            leftY = 0;
+        }
+        if (leftX >= -0.1 && leftX <= 0.1) {
+            leftX = 0;
+        }
+        if (rightX >= -0.1 && rightX <= 0.1) {
+            rightX = 0;
+        }
 
-        driveTrain.driverRelativePower(leftY, leftX, rightX);
-    }
+        driveTrain.driverRelativePower(leftY, leftX , rightX);
 
-    private void intakeLogic() {
-        if (gamepad1.left_bumper) {
+        if (gamepad1.leftBumperWasReleased()) {
             intake.spinIntake();
-        } else if (gamepad1.right_bumper) {
+        }
+        else if (gamepad1.rightBumperWasReleased()) {
             intake.reverseIntake();
-        } else if (gamepad1.b) {
+        }
+        if (gamepad1.bWasReleased()) {
             intake.idleIntake();
         }
     }
 
-    private void outtakeLogic() {
-        if (gamepad1.dpad_up) {
-            outtake.setHoodAngle(0.25);
+    public void controllerBehaviorB () {
+        if (gamepad2.dpadUpWasReleased()) { // close shot
+            outtake.setHoodAngle(.25);
             outtake.setTargetVel(780);
-        } else if (gamepad1.dpad_down) {
-            outtake.setHoodAngle(0.7);
+        }
+        else if (gamepad2.dpadDownWasReleased()) { //far shot
+            outtake.setHoodAngle(.7);
             outtake.setTargetVel(1300);
-        } else if (gamepad1.dpad_right) {
-            outtake.setHoodAngle(0.5);
+        }
+        else if (gamepad2.dpadRightWasReleased()){ //mid shot
+            outtake.setHoodAngle(.5);
             outtake.setTargetVel(1000);
-        } else if (gamepad1.dpad_left) {
+        }
+        else if (gamepad2.dpadLeftWasReleased()) {
             outtake.setTargetVel(0);
         }
-    }
 
-    private void updateTelem() {
-        // Send telemetry to both Driver Station and Dashboard
-        telemetry.addData("Camera Status", visionPortal.getCameraState());
         telemetry.addLine(outtake.outtakeLog());
 
         String[] motif = spindexer.getCurrentMotif();
-        if (motif != null && motif.length >= 3) {
-            telemetry.addData("Motif", "%s, %s, %s", motif[0], motif[1], motif[2]);
+        if (motif != null) {
+            String motifCaption = motif[0] + ", " + motif[1] + ", " + motif[2];
+            telemetry.addLine(motifCaption);
         }
+    }
 
-        // This ensures the text data also shows up on your laptop
-        FtcDashboard.getInstance().getTelemetry().addData("Status", "Running");
-        FtcDashboard.getInstance().getTelemetry().update();
-
-        telemetry.update();
+    public void updateTelem () {
     }
 }

@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-@TeleOp (name = "Driver Teleop")
+@TeleOp (name = "Driver Teleop", group = "Control")
 public class DriverTeleop extends LinearOpMode {
 
     private MecanumDrive driveTrain;
