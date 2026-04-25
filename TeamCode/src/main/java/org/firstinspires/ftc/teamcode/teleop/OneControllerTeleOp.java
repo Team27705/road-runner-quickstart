@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.telop;
+package org.firstinspires.ftc.teamcode.teleop;
 
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;

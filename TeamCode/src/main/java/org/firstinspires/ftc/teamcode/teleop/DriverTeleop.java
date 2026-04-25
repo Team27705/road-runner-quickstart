@@ -1,10 +1,9 @@
-package org.firstinspires.ftc.teamcode.telop;
+package org.firstinspires.ftc.teamcode.teleop;
 
 
 
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -18,8 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-@TeleOp (name = "Driver Telop")
-public class DriverTelop extends LinearOpMode {
+@TeleOp (name = "Driver Teleop")
+public class DriverTeleop extends LinearOpMode {
 
     private MecanumDrive driveTrain;
     private Intake intake;
